@@ -1,40 +1,34 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { createServerFn } from '@tanstack/react-start';
+
+const fetchHello = createServerFn().handler(async () => {
+  const res = await fetch('http://localhost:3000/api/hello');
+  if (!res.ok) {
+    return { message: 'Failed to connect to API' };
+  }
+  return res.json() as Promise<{ message: string }>;
+});
 
 export const Route = createFileRoute('/')({
+  loader: async () => {
+    const data = await fetchHello();
+    return data;
+  },
   component: HomePage,
 });
 
 function HomePage() {
-  const [apiMessage, setApiMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/hello')
-      .then((res) => res.json())
-      .then((data) => {
-        setApiMessage(data.message);
-        setLoading(false);
-      })
-      .catch(() => {
-        setApiMessage('Failed to connect to API');
-        setLoading(false);
-      });
-  }, []);
+  const data = Route.useLoaderData();
 
   return (
     <div className="page home-page">
       <section className="hero">
         <h1 className="hero-title">Welcome to KH Hub</h1>
         <p className="hero-subtitle">
-          A modern monorepo with Hono API and TanStack Router
+          A modern monorepo with Hono API and TanStack Start SSR
         </p>
         <div className="api-status">
-          {loading ? (
-            <span className="status loading">Connecting to API...</span>
-          ) : (
-            <span className="status connected">API: {apiMessage}</span>
-          )}
+          <span className="status connected">API: {data.message}</span>
         </div>
       </section>
       <section className="features">
@@ -43,8 +37,8 @@ function HomePage() {
           <p>Ultrafast, lightweight backend with Hono running on Node.js</p>
         </div>
         <div className="feature-card">
-          <h3>🚀 TanStack Router</h3>
-          <p>Type-safe client-side routing with automatic code splitting</p>
+          <h3>🚀 TanStack Start</h3>
+          <p>Full-stack React framework with SSR, streaming, and server functions</p>
         </div>
         <div className="feature-card">
           <h3>📦 Monorepo</h3>

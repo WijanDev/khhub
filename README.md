@@ -1,6 +1,6 @@
 # KH Hub
 
-A modern monorepo featuring a **Hono** API backend and a **TanStack Router** React frontend.
+A modern monorepo featuring a **Hono** API backend and a **TanStack Start** React frontend with SSR.
 
 ## 🏗️ Project Structure
 
@@ -10,11 +10,13 @@ khhub/
 │   ├── api/          # Hono API server (Node.js)
 │   │   └── src/
 │   │       └── index.ts
-│   └── web/          # React webapp with TanStack Router
+│   └── web/          # TanStack Start SSR webapp
 │       └── src/
-│           ├── routes/
+│           ├── routes/     # File-based routing
 │           ├── styles/
-│           └── main.tsx
+│           ├── router.tsx  # Router configuration
+│           ├── client.tsx  # Client entry
+│           └── ssr.tsx     # Server entry
 ├── packages/         # Shared packages (for future use)
 ├── package.json      # Root workspace configuration
 └── tsconfig.base.json
@@ -76,8 +78,9 @@ npm run build:web
 
 ### Frontend (`apps/web`)
 
-- **[React 18](https://react.dev/)** - UI library
-- **[TanStack Router](https://tanstack.com/router)** - Type-safe client-side routing
+- **[React 19](https://react.dev/)** - UI library
+- **[TanStack Start](https://tanstack.com/start)** - Full-stack React framework with SSR
+- **[TanStack Router](https://tanstack.com/router)** - Type-safe routing
 - **[Vite](https://vitejs.dev/)** - Build tool and dev server
 - **TypeScript** - Type safety
 

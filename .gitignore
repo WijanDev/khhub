@@ -6,6 +6,8 @@ dist/
 build/
 .next/
 out/
+.output/
+.vinxi/
 
 # Environment files
 .env
@@ -37,4 +39,7 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+# TanStack Start generated
+routeTree.gen.ts
 
