@@ -108,6 +108,7 @@ npm run build:web
 ### Backend (`apps/api`)
 
 - **[Hono](https://hono.dev/)** - Ultrafast web framework
+- **[Drizzle ORM](https://orm.drizzle.team/)** - TypeScript ORM
 - **[Cloudflare Workers](https://workers.cloudflare.com/)** - Edge runtime
 - **[Cloudflare D1](https://developers.cloudflare.com/d1/)** - SQLite database
 - **[Cloudflare KV](https://developers.cloudflare.com/kv/)** - Key-value cache
@@ -159,28 +160,44 @@ npm run build:web
 | PUT    | `/api/tenants/:id/connections/:cid` | Update connection   |
 | DELETE | `/api/tenants/:id/connections/:cid` | Delete connection   |
 
-## 🗄️ Database (Cloudflare D1)
+## 🗄️ Database (Cloudflare D1 + Drizzle ORM)
 
-The API uses Cloudflare D1 (SQLite) as the central database.
+The API uses Cloudflare D1 (SQLite) with Drizzle ORM for type-safe database operations.
 
-### Schema Overview
+### Drizzle Schema
 
-```sql
--- Tenants (organizations)
-tenants: id, name, slug, status, created_at, updated_at
+Schema is defined in `apps/api/src/db/schema.ts`:
 
--- Tenant database connections
-tenant_connections: id, tenant_id, name, db_type, connection_string, is_primary, status
+```typescript
+import { createDb, users, tenants, userTenants } from './db';
 
--- Users (authentication)
-users: id, email, password_hash, name, avatar_url, email_verified, status
+const db = createDb(c.env.DB);
 
--- User-Tenant memberships (authorization)
-user_tenants: id, user_id, tenant_id, role (owner|admin|member|viewer)
+// Query with relations
+const user = await db.query.users.findFirst({
+  where: eq(users.id, userId),
+  with: { userTenants: { with: { tenant: true } } },
+});
 
--- Sessions
-sessions: id, user_id, token_hash, expires_at
+// Insert
+const [newUser] = await db.insert(users).values({ email, name, passwordHash }).returning();
+
+// Update
+await db.update(users).set({ name }).where(eq(users.id, id));
+
+// Delete
+await db.delete(users).where(eq(users.id, id));
 ```
+
+### Tables
+
+| Table | Description |
+|-------|-------------|
+| `tenants` | Organizations with name, slug, status |
+| `tenant_connections` | Database connection strings per tenant |
+| `users` | User accounts with authentication |
+| `user_tenants` | Role-based membership (owner, admin, member, viewer) |
+| `sessions` | Auth token storage |
 
 ### Local Development
 
@@ -197,9 +214,11 @@ npm run dev
 
 | Script | Description |
 |--------|-------------|
+| `npm run db:generate` | Generate migrations from schema |
 | `npm run db:migrate` | Apply migrations to local D1 |
 | `npm run db:migrate:prod` | Apply migrations to production D1 |
-| `npm run db:studio` | Query local database |
+| `npm run db:studio` | Open Drizzle Studio (GUI) |
+| `npm run db:push` | Push schema changes directly |
 
 ### Creating a Production D1 Database
 
