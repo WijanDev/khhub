@@ -1,0 +1,25 @@
+{
+  "name": "khhub",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w @khhub/api",
+    "dev:web": "npm run dev -w @khhub/web",
+    "build": "npm run build --workspaces --if-present",
+    "build:api": "npm run build -w @khhub/api",
+    "build:web": "npm run build -w @khhub/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
+
