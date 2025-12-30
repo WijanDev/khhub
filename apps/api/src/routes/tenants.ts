@@ -1,20 +1,20 @@
 import { Hono } from 'hono';
-import type { Env, Tenant, TenantConnection, TenantWithConnections, Variables } from '../types';
+import { eq, sql } from 'drizzle-orm';
+import type { Env, Variables } from '../types';
+import { createDb, tenants, tenantConnections } from '../db';
 import { createCacheManager, CacheKeys, CacheTTL } from '../lib/cache';
 
-const tenants = new Hono<{ Bindings: Env; Variables: Variables }>();
+const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Get all tenants (cached)
-tenants.get('/', async (c) => {
+tenantsRoutes.get('/', async (c) => {
   try {
     const cache = createCacheManager(c.env.CACHE);
+    const db = createDb(c.env.DB);
 
     const result = await cache.getOrSet(
       CacheKeys.allTenants(),
-      async () => {
-        const { results } = await c.env.DB.prepare('SELECT * FROM tenants ORDER BY name').all<Tenant>();
-        return results;
-      },
+      async () => db.query.tenants.findMany({ orderBy: (t, { asc }) => [asc(t.name)] }),
       { ttl: CacheTTL.MEDIUM }
     );
 
@@ -26,27 +26,24 @@ tenants.get('/', async (c) => {
 });
 
 // Get tenant by ID with connections (cached)
-tenants.get('/:id', async (c) => {
+tenantsRoutes.get('/:id', async (c) => {
   const id = c.req.param('id');
   try {
     const cache = createCacheManager(c.env.CACHE);
+    const db = createDb(c.env.DB);
 
-    const result = await cache.getOrSet<TenantWithConnections | null>(
+    const result = await cache.getOrSet(
       CacheKeys.tenant(id),
       async () => {
-        const tenant = await c.env.DB.prepare('SELECT * FROM tenants WHERE id = ?').bind(id).first<Tenant>();
-
-        if (!tenant) {
-          return null;
-        }
-
-        const { results: connections } = await c.env.DB.prepare(
-          'SELECT * FROM tenant_connections WHERE tenant_id = ? ORDER BY is_primary DESC, name'
-        )
-          .bind(id)
-          .all<TenantConnection>();
-
-        return { ...tenant, connections };
+        const tenant = await db.query.tenants.findFirst({
+          where: eq(tenants.id, id),
+          with: {
+            connections: {
+              orderBy: (conn, { desc, asc }) => [desc(conn.isPrimary), asc(conn.name)],
+            },
+          },
+        });
+        return tenant;
       },
       { ttl: CacheTTL.DEFAULT }
     );
@@ -63,7 +60,7 @@ tenants.get('/:id', async (c) => {
 });
 
 // Create tenant (invalidates cache)
-tenants.post('/', async (c) => {
+tenantsRoutes.post('/', async (c) => {
   try {
     const { name, slug } = await c.req.json<{ name: string; slug: string }>();
 
@@ -71,9 +68,8 @@ tenants.post('/', async (c) => {
       return c.json({ error: 'Name and slug are required' }, 400);
     }
 
-    const tenant = await c.env.DB.prepare('INSERT INTO tenants (name, slug) VALUES (?, ?) RETURNING *')
-      .bind(name, slug)
-      .first<Tenant>();
+    const db = createDb(c.env.DB);
+    const [tenant] = await db.insert(tenants).values({ name, slug }).returning();
 
     // Invalidate tenants list cache
     const cache = createCacheManager(c.env.CACHE);
@@ -87,16 +83,21 @@ tenants.post('/', async (c) => {
 });
 
 // Update tenant (invalidates cache)
-tenants.put('/:id', async (c) => {
+tenantsRoutes.put('/:id', async (c) => {
   const id = c.req.param('id');
   try {
     const { name, status } = await c.req.json<{ name?: string; status?: string }>();
 
-    const tenant = await c.env.DB.prepare(
-      "UPDATE tenants SET name = COALESCE(?, name), status = COALESCE(?, status), updated_at = datetime('now') WHERE id = ? RETURNING *"
-    )
-      .bind(name, status, id)
-      .first<Tenant>();
+    const db = createDb(c.env.DB);
+    const [tenant] = await db
+      .update(tenants)
+      .set({
+        ...(name && { name }),
+        ...(status && { status: status as 'active' | 'inactive' | 'suspended' }),
+        updatedAt: sql`datetime('now')`,
+      })
+      .where(eq(tenants.id, id))
+      .returning();
 
     if (!tenant) {
       return c.json({ error: 'Tenant not found' }, 404);
@@ -118,12 +119,11 @@ tenants.put('/:id', async (c) => {
 });
 
 // Delete tenant (invalidates cache)
-tenants.delete('/:id', async (c) => {
+tenantsRoutes.delete('/:id', async (c) => {
   const id = c.req.param('id');
   try {
-    const tenant = await c.env.DB.prepare('DELETE FROM tenants WHERE id = ? RETURNING *')
-      .bind(id)
-      .first<Tenant>();
+    const db = createDb(c.env.DB);
+    const [tenant] = await db.delete(tenants).where(eq(tenants.id, id)).returning();
 
     if (!tenant) {
       return c.json({ error: 'Tenant not found' }, 404);
@@ -131,10 +131,7 @@ tenants.delete('/:id', async (c) => {
 
     // Invalidate caches
     const cache = createCacheManager(c.env.CACHE);
-    await Promise.all([
-      cache.invalidateTenant(id),
-      cache.delete(CacheKeys.allTenants()),
-    ]);
+    await Promise.all([cache.invalidateTenant(id), cache.delete(CacheKeys.allTenants())]);
 
     return c.json({ message: 'Tenant deleted', tenant });
   } catch (error) {
@@ -146,21 +143,19 @@ tenants.delete('/:id', async (c) => {
 // === Tenant Connections ===
 
 // Get connections for a tenant (cached)
-tenants.get('/:id/connections', async (c) => {
+tenantsRoutes.get('/:id/connections', async (c) => {
   const tenantId = c.req.param('id');
   try {
     const cache = createCacheManager(c.env.CACHE);
+    const db = createDb(c.env.DB);
 
     const connections = await cache.getOrSet(
       CacheKeys.tenantConnections(tenantId),
-      async () => {
-        const { results } = await c.env.DB.prepare(
-          'SELECT * FROM tenant_connections WHERE tenant_id = ? ORDER BY is_primary DESC, name'
-        )
-          .bind(tenantId)
-          .all<TenantConnection>();
-        return results;
-      },
+      async () =>
+        db.query.tenantConnections.findMany({
+          where: eq(tenantConnections.tenantId, tenantId),
+          orderBy: (conn, { desc, asc }) => [desc(conn.isPrimary), asc(conn.name)],
+        }),
       { ttl: CacheTTL.LONG }
     );
 
@@ -172,7 +167,7 @@ tenants.get('/:id/connections', async (c) => {
 });
 
 // Add connection to tenant (invalidates cache)
-tenants.post('/:id/connections', async (c) => {
+tenantsRoutes.post('/:id/connections', async (c) => {
   const tenantId = c.req.param('id');
   try {
     const { name, db_type, connection_string, is_primary } = await c.req.json<{
@@ -186,18 +181,26 @@ tenants.post('/:id/connections', async (c) => {
       return c.json({ error: 'Name, db_type, and connection_string are required' }, 400);
     }
 
+    const db = createDb(c.env.DB);
+
     // If setting as primary, unset other primaries first
     if (is_primary) {
-      await c.env.DB.prepare('UPDATE tenant_connections SET is_primary = 0 WHERE tenant_id = ?')
-        .bind(tenantId)
-        .run();
+      await db
+        .update(tenantConnections)
+        .set({ isPrimary: false })
+        .where(eq(tenantConnections.tenantId, tenantId));
     }
 
-    const connection = await c.env.DB.prepare(
-      'INSERT INTO tenant_connections (tenant_id, name, db_type, connection_string, is_primary) VALUES (?, ?, ?, ?, ?) RETURNING *'
-    )
-      .bind(tenantId, name, db_type, connection_string, is_primary ? 1 : 0)
-      .first<TenantConnection>();
+    const [connection] = await db
+      .insert(tenantConnections)
+      .values({
+        tenantId,
+        name,
+        dbType: db_type as 'postgresql' | 'mysql' | 'sqlite' | 'd1',
+        connectionString: connection_string,
+        isPrimary: is_primary || false,
+      })
+      .returning();
 
     // Invalidate caches
     const cache = createCacheManager(c.env.CACHE);
@@ -214,7 +217,7 @@ tenants.post('/:id/connections', async (c) => {
 });
 
 // Update connection (invalidates cache)
-tenants.put('/:id/connections/:connectionId', async (c) => {
+tenantsRoutes.put('/:id/connections/:connectionId', async (c) => {
   const connectionId = c.req.param('connectionId');
   const tenantId = c.req.param('id');
   try {
@@ -225,25 +228,27 @@ tenants.put('/:id/connections/:connectionId', async (c) => {
       status?: string;
     }>();
 
+    const db = createDb(c.env.DB);
+
     // If setting as primary, unset other primaries first
     if (is_primary) {
-      await c.env.DB.prepare('UPDATE tenant_connections SET is_primary = 0 WHERE tenant_id = ?')
-        .bind(tenantId)
-        .run();
+      await db
+        .update(tenantConnections)
+        .set({ isPrimary: false })
+        .where(eq(tenantConnections.tenantId, tenantId));
     }
 
-    const connection = await c.env.DB.prepare(
-      `UPDATE tenant_connections 
-       SET name = COALESCE(?, name), 
-           connection_string = COALESCE(?, connection_string),
-           is_primary = COALESCE(?, is_primary),
-           status = COALESCE(?, status),
-           updated_at = datetime('now') 
-       WHERE id = ? AND tenant_id = ? 
-       RETURNING *`
-    )
-      .bind(name, connection_string, is_primary ? 1 : null, status, connectionId, tenantId)
-      .first<TenantConnection>();
+    const [connection] = await db
+      .update(tenantConnections)
+      .set({
+        ...(name && { name }),
+        ...(connection_string && { connectionString: connection_string }),
+        ...(is_primary !== undefined && { isPrimary: is_primary }),
+        ...(status && { status: status as 'active' | 'inactive' | 'error' }),
+        updatedAt: sql`datetime('now')`,
+      })
+      .where(eq(tenantConnections.id, connectionId))
+      .returning();
 
     if (!connection) {
       return c.json({ error: 'Connection not found' }, 404);
@@ -264,15 +269,15 @@ tenants.put('/:id/connections/:connectionId', async (c) => {
 });
 
 // Delete connection (invalidates cache)
-tenants.delete('/:id/connections/:connectionId', async (c) => {
+tenantsRoutes.delete('/:id/connections/:connectionId', async (c) => {
   const connectionId = c.req.param('connectionId');
   const tenantId = c.req.param('id');
   try {
-    const connection = await c.env.DB.prepare(
-      'DELETE FROM tenant_connections WHERE id = ? AND tenant_id = ? RETURNING *'
-    )
-      .bind(connectionId, tenantId)
-      .first<TenantConnection>();
+    const db = createDb(c.env.DB);
+    const [connection] = await db
+      .delete(tenantConnections)
+      .where(eq(tenantConnections.id, connectionId))
+      .returning();
 
     if (!connection) {
       return c.json({ error: 'Connection not found' }, 404);
@@ -292,4 +297,4 @@ tenants.delete('/:id/connections/:connectionId', async (c) => {
   }
 });
 
-export default tenants;
+export default tenantsRoutes;

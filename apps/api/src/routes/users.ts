@@ -1,22 +1,26 @@
 import { Hono } from 'hono';
-import type { Env, User, UserTenant, Tenant, UserWithTenants, Variables } from '../types';
+import { eq, sql } from 'drizzle-orm';
+import type { Env, Variables } from '../types';
+import { createDb, users, userTenants, tenants } from '../db';
 import { createCacheManager, CacheKeys, CacheTTL } from '../lib/cache';
 
-const users = new Hono<{ Bindings: Env; Variables: Variables }>();
+const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Get all users (cached)
-users.get('/', async (c) => {
+usersRoutes.get('/', async (c) => {
   try {
     const cache = createCacheManager(c.env.CACHE);
+    const db = createDb(c.env.DB);
 
     const result = await cache.getOrSet(
       CacheKeys.allUsers(),
-      async () => {
-        const { results } = await c.env.DB.prepare(
-          'SELECT id, email, name, avatar_url, email_verified, status, created_at, updated_at FROM users ORDER BY name'
-        ).all<Omit<User, 'password_hash'>>();
-        return results;
-      },
+      async () =>
+        db.query.users.findMany({
+          columns: {
+            passwordHash: false,
+          },
+          orderBy: (u, { asc }) => [asc(u.name)],
+        }),
       { ttl: CacheTTL.MEDIUM }
     );
 
@@ -28,45 +32,37 @@ users.get('/', async (c) => {
 });
 
 // Get user by ID with their tenants (cached)
-users.get('/:id', async (c) => {
+usersRoutes.get('/:id', async (c) => {
   const id = c.req.param('id');
   try {
     const cache = createCacheManager(c.env.CACHE);
+    const db = createDb(c.env.DB);
 
-    const result = await cache.getOrSet<UserWithTenants | null>(
+    const result = await cache.getOrSet(
       CacheKeys.user(id),
       async () => {
-        const user = await c.env.DB.prepare(
-          'SELECT id, email, name, avatar_url, email_verified, status, created_at, updated_at FROM users WHERE id = ?'
-        )
-          .bind(id)
-          .first<Omit<User, 'password_hash'>>();
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, id),
+          columns: {
+            passwordHash: false,
+          },
+          with: {
+            userTenants: {
+              with: {
+                tenant: true,
+              },
+            },
+          },
+        });
 
-        if (!user) {
-          return null;
-        }
+        if (!user) return null;
 
-        // Get user's tenants
-        const { results: memberships } = await c.env.DB.prepare(
-          `SELECT ut.role, t.* FROM user_tenants ut 
-           JOIN tenants t ON ut.tenant_id = t.id 
-           WHERE ut.user_id = ?`
-        )
-          .bind(id)
-          .all<UserTenant & Tenant>();
-
+        // Transform to match expected format
         return {
           ...user,
-          tenants: memberships.map((m) => ({
-            tenant: {
-              id: m.id,
-              name: m.name,
-              slug: m.slug,
-              status: m.status,
-              created_at: m.created_at,
-              updated_at: m.updated_at,
-            },
-            role: m.role,
+          tenants: user.userTenants.map((ut) => ({
+            tenant: ut.tenant,
+            role: ut.role,
           })),
         };
       },
@@ -85,7 +81,7 @@ users.get('/:id', async (c) => {
 });
 
 // Create user (invalidates cache)
-users.post('/', async (c) => {
+usersRoutes.post('/', async (c) => {
   try {
     const { email, password, name } = await c.req.json<{
       email: string;
@@ -99,13 +95,19 @@ users.post('/', async (c) => {
 
     // In production, hash the password properly
     // This is a placeholder - use bcrypt or similar
-    const password_hash = `hashed_${password}`;
+    const passwordHash = `hashed_${password}`;
 
-    const user = await c.env.DB.prepare(
-      'INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?) RETURNING id, email, name, status, created_at'
-    )
-      .bind(email, password_hash, name)
-      .first();
+    const db = createDb(c.env.DB);
+    const [user] = await db
+      .insert(users)
+      .values({ email, passwordHash, name })
+      .returning({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        status: users.status,
+        createdAt: users.createdAt,
+      });
 
     // Invalidate users list cache
     const cache = createCacheManager(c.env.CACHE);
@@ -119,7 +121,7 @@ users.post('/', async (c) => {
 });
 
 // Update user (invalidates cache)
-users.put('/:id', async (c) => {
+usersRoutes.put('/:id', async (c) => {
   const id = c.req.param('id');
   try {
     const { name, avatar_url, status } = await c.req.json<{
@@ -128,17 +130,24 @@ users.put('/:id', async (c) => {
       status?: string;
     }>();
 
-    const user = await c.env.DB.prepare(
-      `UPDATE users SET 
-       name = COALESCE(?, name), 
-       avatar_url = COALESCE(?, avatar_url),
-       status = COALESCE(?, status),
-       updated_at = datetime('now') 
-       WHERE id = ? 
-       RETURNING id, email, name, avatar_url, status, updated_at`
-    )
-      .bind(name, avatar_url, status, id)
-      .first();
+    const db = createDb(c.env.DB);
+    const [user] = await db
+      .update(users)
+      .set({
+        ...(name && { name }),
+        ...(avatar_url && { avatarUrl: avatar_url }),
+        ...(status && { status: status as 'active' | 'inactive' | 'suspended' }),
+        updatedAt: sql`datetime('now')`,
+      })
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        avatarUrl: users.avatarUrl,
+        status: users.status,
+        updatedAt: users.updatedAt,
+      });
 
     if (!user) {
       return c.json({ error: 'User not found' }, 404);
@@ -146,10 +155,7 @@ users.put('/:id', async (c) => {
 
     // Invalidate caches
     const cache = createCacheManager(c.env.CACHE);
-    await Promise.all([
-      cache.delete(CacheKeys.user(id)),
-      cache.delete(CacheKeys.allUsers()),
-    ]);
+    await Promise.all([cache.delete(CacheKeys.user(id)), cache.delete(CacheKeys.allUsers())]);
 
     return c.json({ message: 'User updated', user });
   } catch (error) {
@@ -159,12 +165,15 @@ users.put('/:id', async (c) => {
 });
 
 // Delete user (invalidates cache)
-users.delete('/:id', async (c) => {
+usersRoutes.delete('/:id', async (c) => {
   const id = c.req.param('id');
   try {
-    const user = await c.env.DB.prepare('DELETE FROM users WHERE id = ? RETURNING id, email, name')
-      .bind(id)
-      .first();
+    const db = createDb(c.env.DB);
+    const [user] = await db.delete(users).where(eq(users.id, id)).returning({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+    });
 
     if (!user) {
       return c.json({ error: 'User not found' }, 404);
@@ -172,10 +181,7 @@ users.delete('/:id', async (c) => {
 
     // Invalidate caches
     const cache = createCacheManager(c.env.CACHE);
-    await Promise.all([
-      cache.invalidateUser(id),
-      cache.delete(CacheKeys.allUsers()),
-    ]);
+    await Promise.all([cache.invalidateUser(id), cache.delete(CacheKeys.allUsers())]);
 
     return c.json({ message: 'User deleted', user });
   } catch (error) {
@@ -187,7 +193,7 @@ users.delete('/:id', async (c) => {
 // === User-Tenant Memberships ===
 
 // Add user to tenant (invalidates cache)
-users.post('/:id/tenants', async (c) => {
+usersRoutes.post('/:id/tenants', async (c) => {
   const userId = c.req.param('id');
   try {
     const { tenant_id, role } = await c.req.json<{ tenant_id: string; role?: string }>();
@@ -196,11 +202,15 @@ users.post('/:id/tenants', async (c) => {
       return c.json({ error: 'tenant_id is required' }, 400);
     }
 
-    const membership = await c.env.DB.prepare(
-      'INSERT INTO user_tenants (user_id, tenant_id, role) VALUES (?, ?, ?) RETURNING *'
-    )
-      .bind(userId, tenant_id, role || 'member')
-      .first<UserTenant>();
+    const db = createDb(c.env.DB);
+    const [membership] = await db
+      .insert(userTenants)
+      .values({
+        userId,
+        tenantId: tenant_id,
+        role: (role as 'owner' | 'admin' | 'member' | 'viewer') || 'member',
+      })
+      .returning();
 
     // Invalidate caches
     const cache = createCacheManager(c.env.CACHE);
@@ -217,7 +227,7 @@ users.post('/:id/tenants', async (c) => {
 });
 
 // Update user role in tenant (invalidates cache)
-users.put('/:id/tenants/:tenantId', async (c) => {
+usersRoutes.put('/:id/tenants/:tenantId', async (c) => {
   const userId = c.req.param('id');
   const tenantId = c.req.param('tenantId');
   try {
@@ -227,11 +237,15 @@ users.put('/:id/tenants/:tenantId', async (c) => {
       return c.json({ error: 'role is required' }, 400);
     }
 
-    const membership = await c.env.DB.prepare(
-      "UPDATE user_tenants SET role = ?, updated_at = datetime('now') WHERE user_id = ? AND tenant_id = ? RETURNING *"
-    )
-      .bind(role, userId, tenantId)
-      .first<UserTenant>();
+    const db = createDb(c.env.DB);
+    const [membership] = await db
+      .update(userTenants)
+      .set({
+        role: role as 'owner' | 'admin' | 'member' | 'viewer',
+        updatedAt: sql`datetime('now')`,
+      })
+      .where(sql`${userTenants.userId} = ${userId} AND ${userTenants.tenantId} = ${tenantId}`)
+      .returning();
 
     if (!membership) {
       return c.json({ error: 'Membership not found' }, 404);
@@ -252,15 +266,15 @@ users.put('/:id/tenants/:tenantId', async (c) => {
 });
 
 // Remove user from tenant (invalidates cache)
-users.delete('/:id/tenants/:tenantId', async (c) => {
+usersRoutes.delete('/:id/tenants/:tenantId', async (c) => {
   const userId = c.req.param('id');
   const tenantId = c.req.param('tenantId');
   try {
-    const membership = await c.env.DB.prepare(
-      'DELETE FROM user_tenants WHERE user_id = ? AND tenant_id = ? RETURNING *'
-    )
-      .bind(userId, tenantId)
-      .first<UserTenant>();
+    const db = createDb(c.env.DB);
+    const [membership] = await db
+      .delete(userTenants)
+      .where(sql`${userTenants.userId} = ${userId} AND ${userTenants.tenantId} = ${tenantId}`)
+      .returning();
 
     if (!membership) {
       return c.json({ error: 'Membership not found' }, 404);
@@ -280,4 +294,4 @@ users.delete('/:id/tenants/:tenantId', async (c) => {
   }
 });
 
-export default users;
+export default usersRoutes;
