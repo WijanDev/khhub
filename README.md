@@ -109,6 +109,7 @@ npm run build:web
 
 - **[Hono](https://hono.dev/)** - Ultrafast web framework
 - **[Drizzle ORM](https://orm.drizzle.team/)** - TypeScript ORM
+- **[Better Auth](https://www.better-auth.com/)** - Authentication with admin plugin
 - **[Cloudflare Workers](https://workers.cloudflare.com/)** - Edge runtime
 - **[Cloudflare D1](https://developers.cloudflare.com/d1/)** - SQLite database
 - **[Cloudflare KV](https://developers.cloudflare.com/kv/)** - Key-value cache

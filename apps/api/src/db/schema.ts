@@ -45,19 +45,21 @@ export const tenantConnectionsRelations = relations(tenantConnections, ({ one })
 }));
 
 // ============================================================================
-// USERS
+// USERS (Better Auth compatible with mode: 'timestamp' for D1 compatibility)
 // ============================================================================
 
-export const users = sqliteTable('users', {
+export const users = sqliteTable('user', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  email: text('email').notNull().unique(),
-  passwordHash: text('password_hash').notNull(),
   name: text('name').notNull(),
-  avatarUrl: text('avatar_url'),
+  email: text('email').notNull().unique(),
   emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
-  status: text('status', { enum: ['active', 'inactive', 'suspended'] }).default('active'),
-  createdAt: text('created_at').default(sql`(datetime('now'))`),
-  updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+  image: text('image'),
+  role: text('role', { enum: ['user', 'admin'] }).default('user'),
+  banned: integer('banned', { mode: 'boolean' }).default(false),
+  banReason: text('ban_reason'),
+  banExpires: integer('ban_expires', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 }, (table) => [
   index('idx_users_email').on(table.email),
 ]);
@@ -65,7 +67,77 @@ export const users = sqliteTable('users', {
 export const usersRelations = relations(users, ({ many }) => ({
   userTenants: many(userTenants),
   sessions: many(sessions),
+  accounts: many(accounts),
 }));
+
+// ============================================================================
+// SESSIONS (Better Auth compatible)
+// ============================================================================
+
+export const sessions = sqliteTable('session', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  impersonatedBy: text('impersonated_by'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+}, (table) => [
+  index('idx_sessions_user').on(table.userId),
+  index('idx_sessions_token').on(table.token),
+]);
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
+// ACCOUNTS (Better Auth - OAuth providers)
+// ============================================================================
+
+export const accounts = sqliteTable('account', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp' }),
+  refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp' }),
+  scope: text('scope'),
+  password: text('password'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+}, (table) => [
+  index('idx_accounts_user').on(table.userId),
+]);
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
+// VERIFICATIONS (Better Auth - email verification, password reset)
+// ============================================================================
+
+export const verifications = sqliteTable('verification', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+}, (table) => [
+  index('idx_verifications_identifier').on(table.identifier),
+]);
 
 // ============================================================================
 // USER-TENANT MEMBERSHIPS
@@ -95,28 +167,6 @@ export const userTenantsRelations = relations(userTenants, ({ one }) => ({
 }));
 
 // ============================================================================
-// SESSIONS
-// ============================================================================
-
-export const sessions = sqliteTable('sessions', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  tokenHash: text('token_hash').notNull().unique(),
-  expiresAt: text('expires_at').notNull(),
-  createdAt: text('created_at').default(sql`(datetime('now'))`),
-}, (table) => [
-  index('idx_sessions_user').on(table.userId),
-  index('idx_sessions_token').on(table.tokenHash),
-]);
-
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
-  }),
-}));
-
-// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -129,9 +179,14 @@ export type NewTenantConnection = typeof tenantConnections.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
-export type UserTenant = typeof userTenants.$inferSelect;
-export type NewUserTenant = typeof userTenants.$inferInsert;
-
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
 
+export type Account = typeof accounts.$inferSelect;
+export type NewAccount = typeof accounts.$inferInsert;
+
+export type Verification = typeof verifications.$inferSelect;
+export type NewVerification = typeof verifications.$inferInsert;
+
+export type UserTenant = typeof userTenants.$inferSelect;
+export type NewUserTenant = typeof userTenants.$inferInsert;
