@@ -43,3 +43,7 @@ coverage/
 # TanStack Start generated
 routeTree.gen.ts
 
+# Cloudflare
+.wrangler/
+.dev.vars
+

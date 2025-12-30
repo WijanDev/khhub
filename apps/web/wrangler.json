@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "khhub-web",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": "dist/client",
+  "vars": {
+    "API_URL": "https://khhub-api.your-subdomain.workers.dev"
+  }
+}
+
