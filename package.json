@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "concurrently --kill-others-on-fail \"npm:dev:*\"",
     "dev:api": "npm run dev -w @khhub/api",
     "dev:web": "npm run dev -w @khhub/web",
     "build": "npm run build --workspaces --if-present",
@@ -16,10 +16,15 @@
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "vite": "^7.3.0"
   }
 }
-
