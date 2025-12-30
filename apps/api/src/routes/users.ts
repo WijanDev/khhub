@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { eq, sql } from 'drizzle-orm';
 import type { Env, Variables } from '../types';
-import { createDb, users, userTenants, tenants } from '../db';
+import { createDb, users, userTenants } from '../db';
 import { createCacheManager, CacheKeys, CacheTTL } from '../lib/cache';
 
 const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -16,9 +16,6 @@ usersRoutes.get('/', async (c) => {
       CacheKeys.allUsers(),
       async () =>
         db.query.users.findMany({
-          columns: {
-            passwordHash: false,
-          },
           orderBy: (u, { asc }) => [asc(u.name)],
         }),
       { ttl: CacheTTL.MEDIUM }
@@ -43,9 +40,6 @@ usersRoutes.get('/:id', async (c) => {
       async () => {
         const user = await db.query.users.findFirst({
           where: eq(users.id, id),
-          columns: {
-            passwordHash: false,
-          },
           with: {
             userTenants: {
               with: {
@@ -80,54 +74,15 @@ usersRoutes.get('/:id', async (c) => {
   }
 });
 
-// Create user (invalidates cache)
-usersRoutes.post('/', async (c) => {
-  try {
-    const { email, password, name } = await c.req.json<{
-      email: string;
-      password: string;
-      name: string;
-    }>();
-
-    if (!email || !password || !name) {
-      return c.json({ error: 'Email, password, and name are required' }, 400);
-    }
-
-    // In production, hash the password properly
-    // This is a placeholder - use bcrypt or similar
-    const passwordHash = `hashed_${password}`;
-
-    const db = createDb(c.env.DB);
-    const [user] = await db
-      .insert(users)
-      .values({ email, passwordHash, name })
-      .returning({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        status: users.status,
-        createdAt: users.createdAt,
-      });
-
-    // Invalidate users list cache
-    const cache = createCacheManager(c.env.CACHE);
-    await cache.delete(CacheKeys.allUsers());
-
-    return c.json({ message: 'User created', user }, 201);
-  } catch (error) {
-    console.error('Error creating user:', error);
-    return c.json({ error: 'Failed to create user' }, 500);
-  }
-});
-
 // Update user (invalidates cache)
 usersRoutes.put('/:id', async (c) => {
   const id = c.req.param('id');
   try {
-    const { name, avatar_url, status } = await c.req.json<{
+    const { name, image, role, banned } = await c.req.json<{
       name?: string;
-      avatar_url?: string;
-      status?: string;
+      image?: string;
+      role?: 'user' | 'admin';
+      banned?: boolean;
     }>();
 
     const db = createDb(c.env.DB);
@@ -135,19 +90,13 @@ usersRoutes.put('/:id', async (c) => {
       .update(users)
       .set({
         ...(name && { name }),
-        ...(avatar_url && { avatarUrl: avatar_url }),
-        ...(status && { status: status as 'active' | 'inactive' | 'suspended' }),
-        updatedAt: sql`datetime('now')`,
+        ...(image !== undefined && { image }),
+        ...(role && { role }),
+        ...(banned !== undefined && { banned }),
+        updatedAt: new Date(),
       })
       .where(eq(users.id, id))
-      .returning({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        avatarUrl: users.avatarUrl,
-        status: users.status,
-        updatedAt: users.updatedAt,
-      });
+      .returning();
 
     if (!user) {
       return c.json({ error: 'User not found' }, 404);

@@ -5,7 +5,8 @@
   "compatibility_date": "2024-12-30",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "ENVIRONMENT": "production"
+    "ENVIRONMENT": "production",
+    "AUTH_SECRET": "change-this-in-production-use-random-32-chars"
   },
   "d1_databases": [
     {

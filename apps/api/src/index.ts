@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import type { Env, Variables } from './types';
+import authRoutes from './routes/auth';
 import tenantsRoutes from './routes/tenants';
 import usersRoutes from './routes/users';
 import storageRoutes from './routes/storage';
@@ -13,9 +14,10 @@ app.use('*', logger());
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:4173', 'https://khhub-web.pages.dev'],
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173', 'https://khhub-web.pages.dev'],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+    credentials: true,
   })
 );
 
@@ -35,6 +37,9 @@ const api = new Hono<{ Bindings: Env; Variables: Variables }>();
 api.get('/hello', (c) => {
   return c.json({ message: 'Hello from Hono API!' });
 });
+
+// Auth routes (handled by Better Auth)
+api.route('/auth', authRoutes);
 
 // Mount route modules
 api.route('/tenants', tenantsRoutes);
