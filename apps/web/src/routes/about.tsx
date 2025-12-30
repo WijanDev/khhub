@@ -12,13 +12,13 @@ function AboutPage() {
         <h2>Technology Stack</h2>
         <ul className="tech-list">
           <li>
-            <strong>Frontend:</strong> React 18 with TanStack Router
+            <strong>Frontend:</strong> React 19 with TanStack Start (SSR)
           </li>
           <li>
             <strong>Backend:</strong> Hono with Node.js server adapter
           </li>
           <li>
-            <strong>Build Tool:</strong> Vite for frontend, tsup for API
+            <strong>Build Tool:</strong> Vite for both frontend and API
           </li>
           <li>
             <strong>Language:</strong> TypeScript throughout
@@ -34,7 +34,12 @@ function AboutPage() {
 {`khhub/
 ├── apps/
 │   ├── api/          # Hono API server
-│   └── web/          # TanStack Router webapp
+│   └── web/          # TanStack Start SSR webapp
+│       └── app/
+│           ├── routes/   # File-based routing
+│           ├── router.tsx
+│           ├── client.tsx
+│           └── ssr.tsx
 ├── packages/         # Shared packages (future)
 ├── package.json      # Root workspace config
 └── tsconfig.base.json`}
