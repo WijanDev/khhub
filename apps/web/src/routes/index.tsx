@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 
 const fetchHello = createServerFn().handler(async () => {
-  const res = await fetch('http://localhost:3000/api/hello');
+  const res = await fetch('http://localhost:8787/api/hello');
   if (!res.ok) {
     return { message: 'Failed to connect to API' };
   }
