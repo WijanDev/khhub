@@ -6,6 +6,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { useFormValidation, z } from '@/lib/form-validation';
+
+// Schema for reset password with confirmation
+const ResetPasswordFormSchema = z.object({
+  newPassword: z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength'),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'validation.password.mismatch',
+  path: ['confirmPassword'],
+});
+type ResetPasswordFormInput = z.infer<typeof ResetPasswordFormSchema>;
 
 export const Route = createFileRoute('/auth/reset-password')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -20,59 +31,48 @@ function ResetPasswordPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { token } = Route.useSearch();
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const form = useFormValidation<ResetPasswordFormInput>({
+    schema: ResetPasswordFormSchema,
+    initialValues: {
+      newPassword: '',
+      confirmPassword: '',
+    },
+    onSubmit: async (values) => {
+      setServerError('');
 
-    if (password !== confirmPassword) {
-      setError(t('auth.errors.passwordMismatch'));
-      return;
-    }
-
-    if (password.length < 8) {
-      setError(t('auth.errors.passwordTooShort'));
-      return;
-    }
-
-    if (!token) {
-      setError(t('auth.resetPassword.invalidLink.description'));
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token,
-          newPassword: password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || t('auth.errors.genericError'));
+      if (!token) {
+        setServerError(t('auth.resetPassword.invalidLink.description'));
         return;
       }
 
-      setSuccess(true);
-    } catch {
-      setError(t('auth.errors.genericError'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      try {
+        const response = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token,
+            newPassword: values.newPassword,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setServerError(data.error || t('auth.errors.genericError'));
+          return;
+        }
+
+        setSuccess(true);
+      } catch {
+        setServerError(t('auth.errors.genericError'));
+      }
+    },
+  });
 
   if (success) {
     return (
@@ -126,24 +126,25 @@ function ResetPasswordPage() {
         <CardTitle className="text-2xl font-bold">{t('auth.resetPassword.title')}</CardTitle>
         <CardDescription>{t('auth.resetPassword.description')}</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={form.handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
+          {serverError && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
+              {serverError}
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="password">{t('auth.resetPassword.newPassword')}</Label>
+            <Label htmlFor="newPassword">{t('auth.resetPassword.newPassword')}</Label>
             <Input
-              id="password"
+              id="newPassword"
               type="password"
               placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('newPassword')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.newPassword && form.errors.newPassword && (
+              <p className="text-sm text-destructive">{form.errors.newPassword}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">{t('auth.resetPassword.confirmPassword')}</Label>
@@ -151,16 +152,17 @@ function ResetPasswordPage() {
               id="confirmPassword"
               type="password"
               placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('confirmPassword')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.confirmPassword && form.errors.confirmPassword && (
+              <p className="text-sm text-destructive">{form.errors.confirmPassword}</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
+          <Button type="submit" className="w-full" disabled={form.isSubmitting}>
+            {form.isSubmitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
           </Button>
           <Link
             to="/auth/signin"

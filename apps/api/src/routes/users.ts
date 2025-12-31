@@ -3,6 +3,17 @@ import { eq, sql } from 'drizzle-orm';
 import type { Env, Variables } from '../types';
 import { createDb, users, userTenants } from '../db';
 import { createCacheManager, CacheKeys, CacheTTL } from '../lib/cache';
+import { validateJson, validateParam, IdParamSchema, IdTenantParamSchema } from '../middleware/validation';
+import { AddUserToTenantSchema, UpdateUserRoleSchema } from '@khhub/shared';
+import { z } from 'zod';
+
+// User update schema (specific to this API)
+const UpdateUserApiSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  image: z.string().url().optional(),
+  role: z.enum(['user', 'admin']).optional(),
+  banned: z.boolean().optional(),
+});
 
 const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -75,15 +86,10 @@ usersRoutes.get('/:id', async (c) => {
 });
 
 // Update user (invalidates cache)
-usersRoutes.put('/:id', async (c) => {
-  const id = c.req.param('id');
+usersRoutes.put('/:id', validateParam(IdParamSchema), validateJson(UpdateUserApiSchema), async (c) => {
+  const { id } = c.req.valid('param');
   try {
-    const { name, image, role, banned } = await c.req.json<{
-      name?: string;
-      image?: string;
-      role?: 'user' | 'admin';
-      banned?: boolean;
-    }>();
+    const { name, image, role, banned } = c.req.valid('json');
 
     const db = createDb(c.env.DB);
     const [user] = await db
@@ -142,14 +148,10 @@ usersRoutes.delete('/:id', async (c) => {
 // === User-Tenant Memberships ===
 
 // Add user to tenant (invalidates cache)
-usersRoutes.post('/:id/tenants', async (c) => {
-  const userId = c.req.param('id');
+usersRoutes.post('/:id/tenants', validateParam(IdParamSchema), validateJson(AddUserToTenantSchema), async (c) => {
+  const { id: userId } = c.req.valid('param');
   try {
-    const { tenant_id, role } = await c.req.json<{ tenant_id: string; role?: string }>();
-
-    if (!tenant_id) {
-      return c.json({ error: 'tenant_id is required' }, 400);
-    }
+    const { tenant_id, role } = c.req.valid('json');
 
     const db = createDb(c.env.DB);
     const [membership] = await db
@@ -176,15 +178,10 @@ usersRoutes.post('/:id/tenants', async (c) => {
 });
 
 // Update user role in tenant (invalidates cache)
-usersRoutes.put('/:id/tenants/:tenantId', async (c) => {
-  const userId = c.req.param('id');
-  const tenantId = c.req.param('tenantId');
+usersRoutes.put('/:id/tenants/:tenantId', validateParam(IdTenantParamSchema), validateJson(UpdateUserRoleSchema), async (c) => {
+  const { id: userId, tenantId } = c.req.valid('param');
   try {
-    const { role } = await c.req.json<{ role: string }>();
-
-    if (!role) {
-      return c.json({ error: 'role is required' }, 400);
-    }
+    const { role } = c.req.valid('json');
 
     const db = createDb(c.env.DB);
     const [membership] = await db

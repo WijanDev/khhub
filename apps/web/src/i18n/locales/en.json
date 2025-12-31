@@ -1,4 +1,38 @@
 {
+  "validation": {
+    "invalid": "Invalid value",
+    "required": "This field is required",
+    "email": {
+      "invalid": "Invalid email address"
+    },
+    "password": {
+      "minLength": "Password must be at least 8 characters",
+      "maxLength": "Password cannot exceed 128 characters",
+      "mismatch": "Passwords do not match"
+    },
+    "name": {
+      "minLength": "Name must be at least 2 characters",
+      "maxLength": "Name cannot exceed 100 characters"
+    },
+    "slug": {
+      "minLength": "Slug must be at least 2 characters",
+      "maxLength": "Slug cannot exceed 50 characters",
+      "format": "Slug can only contain lowercase letters, numbers, and hyphens"
+    },
+    "url": {
+      "invalid": "Invalid URL"
+    },
+    "token": {
+      "required": "Token is required"
+    },
+    "tenantId": {
+      "required": "Tenant ID is required"
+    },
+    "connectionString": {
+      "required": "Connection string is required",
+      "maxLength": "Connection string cannot exceed 500 characters"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

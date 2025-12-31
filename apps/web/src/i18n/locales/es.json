@@ -1,4 +1,38 @@
 {
+  "validation": {
+    "invalid": "Valor inválido",
+    "required": "Este campo es obligatorio",
+    "email": {
+      "invalid": "Correo electrónico inválido"
+    },
+    "password": {
+      "minLength": "La contraseña debe tener al menos 8 caracteres",
+      "maxLength": "La contraseña no puede exceder 128 caracteres",
+      "mismatch": "Las contraseñas no coinciden"
+    },
+    "name": {
+      "minLength": "El nombre debe tener al menos 2 caracteres",
+      "maxLength": "El nombre no puede exceder 100 caracteres"
+    },
+    "slug": {
+      "minLength": "El slug debe tener al menos 2 caracteres",
+      "maxLength": "El slug no puede exceder 50 caracteres",
+      "format": "El slug solo puede contener letras minúsculas, números y guiones"
+    },
+    "url": {
+      "invalid": "URL inválida"
+    },
+    "token": {
+      "required": "Token es obligatorio"
+    },
+    "tenantId": {
+      "required": "ID de organización es obligatorio"
+    },
+    "connectionString": {
+      "required": "Cadena de conexión es obligatoria",
+      "maxLength": "La cadena de conexión no puede exceder 500 caracteres"
+    }
+  },
   "common": {
     "loading": "Cargando...",
     "error": "Error",

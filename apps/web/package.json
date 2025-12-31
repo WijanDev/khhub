@@ -12,6 +12,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@khhub/shared": "*",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
@@ -29,7 +30,8 @@
     "react-dom": "^19.2.3",
     "react-i18next": "^16.5.0",
     "tailwind-merge": "^3.4.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.17.1",
