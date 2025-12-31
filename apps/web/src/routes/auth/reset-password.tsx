@@ -1,22 +1,26 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
-import { useFormValidation, z } from '@/lib/form-validation';
+import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
+
+// Schema for password field
+const PasswordSchema = z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength');
 
 // Schema for reset password with confirmation
 const ResetPasswordFormSchema = z.object({
-  newPassword: z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength'),
+  newPassword: PasswordSchema,
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: 'validation.password.mismatch',
   path: ['confirmPassword'],
 });
-type ResetPasswordFormInput = z.infer<typeof ResetPasswordFormSchema>;
 
 export const Route = createFileRoute('/auth/reset-password')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -34,13 +38,15 @@ function ResetPasswordPage() {
   const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const form = useFormValidation<ResetPasswordFormInput>({
-    schema: ResetPasswordFormSchema,
-    initialValues: {
+  const form = useForm({
+    defaultValues: {
       newPassword: '',
       confirmPassword: '',
     },
-    onSubmit: async (values) => {
+    validators: {
+      onSubmit: zodValidator(ResetPasswordFormSchema),
+    },
+    onSubmit: async ({ value }) => {
       setServerError('');
 
       if (!token) {
@@ -56,7 +62,7 @@ function ResetPasswordPage() {
           },
           body: JSON.stringify({
             token,
-            newPassword: values.newPassword,
+            newPassword: value.newPassword,
           }),
         });
 
@@ -126,43 +132,84 @@ function ResetPasswordPage() {
         <CardTitle className="text-2xl font-bold">{t('auth.resetPassword.title')}</CardTitle>
         <CardDescription>{t('auth.resetPassword.description')}</CardDescription>
       </CardHeader>
-      <form onSubmit={form.handleSubmit}>
+      <Form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+      >
         <CardContent className="space-y-4">
           {serverError && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
               {serverError}
             </div>
           )}
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">{t('auth.resetPassword.newPassword')}</Label>
-            <Input
-              id="newPassword"
-              type="password"
-              placeholder="••••••••"
-              {...form.getFieldProps('newPassword')}
-              disabled={form.isSubmitting}
-            />
-            {form.touched.newPassword && form.errors.newPassword && (
-              <p className="text-sm text-destructive">{form.errors.newPassword}</p>
+
+          <form.Field
+            name="newPassword"
+            validators={{
+              onChange: zodFieldValidator(PasswordSchema),
+            }}
+          >
+            {(field) => (
+              <FormField field={field}>
+                <FormLabel htmlFor="newPassword">{t('auth.resetPassword.newPassword')}</FormLabel>
+                <FormControl>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    disabled={form.state.isSubmitting}
+                  />
+                </FormControl>
+                {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
+                  <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
+                )}
+              </FormField>
             )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">{t('auth.resetPassword.confirmPassword')}</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              {...form.getFieldProps('confirmPassword')}
-              disabled={form.isSubmitting}
-            />
-            {form.touched.confirmPassword && form.errors.confirmPassword && (
-              <p className="text-sm text-destructive">{form.errors.confirmPassword}</p>
+          </form.Field>
+
+          <form.Field
+            name="confirmPassword"
+            validators={{
+              onChange: ({ value, fieldApi }) => {
+                const password = fieldApi.form.getFieldValue('newPassword');
+                if (value && password && value !== password) {
+                  return 'validation.password.mismatch';
+                }
+                return undefined;
+              },
+            }}
+          >
+            {(field) => (
+              <FormField field={field}>
+                <FormLabel htmlFor="confirmPassword">{t('auth.resetPassword.confirmPassword')}</FormLabel>
+                <FormControl>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    disabled={form.state.isSubmitting}
+                  />
+                </FormControl>
+                {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
+                  <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
+                )}
+              </FormField>
             )}
-          </div>
+          </form.Field>
         </CardContent>
+
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={form.isSubmitting}>
-            {form.isSubmitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
+          <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
+            {form.state.isSubmitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
           </Button>
           <Link
             to="/auth/signin"
@@ -172,7 +219,7 @@ function ResetPasswordPage() {
             {t('auth.resetPassword.backToSignIn')}
           </Link>
         </CardFooter>
-      </form>
+      </Form>
     </Card>
   );
 }

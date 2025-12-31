@@ -17,6 +17,7 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-form": "^1.27.7",
     "@tanstack/react-router": "^1.144.0",
     "@tanstack/react-start": "^1.145.3",
     "better-auth": "^1.4.9",
