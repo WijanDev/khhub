@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signUp } from '@/lib/auth-client';
+import { useFormValidation } from '@/lib/form-validation';
+import { SignUpWithConfirmSchema, type SignUpWithConfirmInput } from '@khhub/shared';
 
 export const Route = createFileRoute('/auth/signup')({
   component: SignUpPage,
@@ -14,48 +16,37 @@ export const Route = createFileRoute('/auth/signup')({
 function SignUpPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const form = useFormValidation<SignUpWithConfirmInput>({
+    schema: SignUpWithConfirmSchema,
+    initialValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+    onSubmit: async (values) => {
+      setServerError('');
 
-    if (password !== confirmPassword) {
-      setError(t('auth.errors.passwordMismatch'));
-      return;
-    }
+      try {
+        const result = await signUp.email({
+          email: values.email,
+          password: values.password,
+          name: values.name,
+        });
 
-    if (password.length < 8) {
-      setError(t('auth.errors.passwordTooShort'));
-      return;
-    }
+        if (result.error) {
+          setServerError(result.error.message || t('auth.errors.genericError'));
+          return;
+        }
 
-    setIsLoading(true);
-
-    try {
-      const result = await signUp.email({
-        email,
-        password,
-        name,
-      });
-
-      if (result.error) {
-        setError(result.error.message || t('auth.errors.genericError'));
-        return;
+        navigate({ to: '/app/dashboard' });
+      } catch {
+        setServerError(t('auth.errors.genericError'));
       }
-
-      navigate({ to: '/app/dashboard' });
-    } catch {
-      setError(t('auth.errors.genericError'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
   return (
     <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
@@ -63,11 +54,11 @@ function SignUpPage() {
         <CardTitle className="text-2xl font-bold">{t('auth.signUp.title')}</CardTitle>
         <CardDescription>{t('auth.signUp.description')}</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={form.handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
+          {serverError && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
+              {serverError}
             </div>
           )}
           <div className="space-y-2">
@@ -76,11 +67,12 @@ function SignUpPage() {
               id="name"
               type="text"
               placeholder="John Doe"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('name')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.name && form.errors.name && (
+              <p className="text-sm text-destructive">{form.errors.name}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">{t('auth.signUp.email')}</Label>
@@ -88,11 +80,12 @@ function SignUpPage() {
               id="email"
               type="email"
               placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('email')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.email && form.errors.email && (
+              <p className="text-sm text-destructive">{form.errors.email}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">{t('auth.signUp.password')}</Label>
@@ -100,11 +93,12 @@ function SignUpPage() {
               id="password"
               type="password"
               placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('password')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.password && form.errors.password && (
+              <p className="text-sm text-destructive">{form.errors.password}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">{t('auth.signUp.confirmPassword')}</Label>
@@ -112,16 +106,17 @@ function SignUpPage() {
               id="confirmPassword"
               type="password"
               placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('confirmPassword')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.confirmPassword && form.errors.confirmPassword && (
+              <p className="text-sm text-destructive">{form.errors.confirmPassword}</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t('auth.signUp.submitting') : t('auth.signUp.submit')}
+          <Button type="submit" className="w-full" disabled={form.isSubmitting}>
+            {form.isSubmitting ? t('auth.signUp.submitting') : t('auth.signUp.submit')}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             {t('auth.signUp.hasAccount')}{' '}

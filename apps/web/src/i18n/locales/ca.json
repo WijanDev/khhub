@@ -1,4 +1,38 @@
 {
+  "validation": {
+    "invalid": "Valor invàlid",
+    "required": "Aquest camp és obligatori",
+    "email": {
+      "invalid": "Correu electrònic invàlid"
+    },
+    "password": {
+      "minLength": "La contrasenya ha de tenir almenys 8 caràcters",
+      "maxLength": "La contrasenya no pot excedir 128 caràcters",
+      "mismatch": "Les contrasenyes no coincideixen"
+    },
+    "name": {
+      "minLength": "El nom ha de tenir almenys 2 caràcters",
+      "maxLength": "El nom no pot excedir 100 caràcters"
+    },
+    "slug": {
+      "minLength": "El slug ha de tenir almenys 2 caràcters",
+      "maxLength": "El slug no pot excedir 50 caràcters",
+      "format": "El slug només pot contenir lletres minúscules, números i guions"
+    },
+    "url": {
+      "invalid": "URL invàlida"
+    },
+    "token": {
+      "required": "Token és obligatori"
+    },
+    "tenantId": {
+      "required": "ID d'organització és obligatori"
+    },
+    "connectionString": {
+      "required": "Cadena de connexió és obligatòria",
+      "maxLength": "La cadena de connexió no pot excedir 500 caràcters"
+    }
+  },
   "common": {
     "loading": "Carregant...",
     "error": "Error",

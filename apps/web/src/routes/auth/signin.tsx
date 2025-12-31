@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signIn } from '@/lib/auth-client';
+import { useFormValidation } from '@/lib/form-validation';
+import { SignInSchema, type SignInInput } from '@khhub/shared';
 
 export const Route = createFileRoute('/auth/signin')({
   component: SignInPage,
@@ -14,34 +16,34 @@ export const Route = createFileRoute('/auth/signin')({
 function SignInPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  const form = useFormValidation<SignInInput>({
+    schema: SignInSchema,
+    initialValues: {
+      email: '',
+      password: '',
+    },
+    onSubmit: async (values) => {
+      setServerError('');
 
-    try {
-      const result = await signIn.email({
-        email,
-        password,
-      });
+      try {
+        const result = await signIn.email({
+          email: values.email,
+          password: values.password,
+        });
 
-      if (result.error) {
-        setError(t('auth.errors.invalidCredentials'));
-        return;
+        if (result.error) {
+          setServerError(t('auth.errors.invalidCredentials'));
+          return;
+        }
+
+        navigate({ to: '/app/dashboard' });
+      } catch {
+        setServerError(t('auth.errors.genericError'));
       }
-
-      navigate({ to: '/app/dashboard' });
-    } catch {
-      setError(t('auth.errors.genericError'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
   return (
     <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
@@ -49,11 +51,11 @@ function SignInPage() {
         <CardTitle className="text-2xl font-bold">{t('auth.signIn.title')}</CardTitle>
         <CardDescription>{t('auth.signIn.description')}</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={form.handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
+          {serverError && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
+              {serverError}
             </div>
           )}
           <div className="space-y-2">
@@ -62,11 +64,12 @@ function SignInPage() {
               id="email"
               type="email"
               placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('email')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.email && form.errors.email && (
+              <p className="text-sm text-destructive">{form.errors.email}</p>
+            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -82,16 +85,17 @@ function SignInPage() {
               id="password"
               type="password"
               placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('password')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.password && form.errors.password && (
+              <p className="text-sm text-destructive">{form.errors.password}</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t('auth.signIn.submitting') : t('auth.signIn.submit')}
+          <Button type="submit" className="w-full" disabled={form.isSubmitting}>
+            {form.isSubmitting ? t('auth.signIn.submitting') : t('auth.signIn.submit')}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             {t('auth.signIn.noAccount')}{' '}

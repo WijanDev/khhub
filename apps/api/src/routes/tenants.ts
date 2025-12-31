@@ -3,6 +3,8 @@ import { eq, sql } from 'drizzle-orm';
 import type { Env, Variables } from '../types';
 import { createDb, tenants, tenantConnections } from '../db';
 import { createCacheManager, CacheKeys, CacheTTL } from '../lib/cache';
+import { validateJson, IdParamSchema, IdConnectionParamSchema, validateParam } from '../middleware/validation';
+import { CreateTenantSchema, UpdateTenantSchema, CreateConnectionSchema, UpdateConnectionSchema } from '@khhub/shared';
 
 const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -60,13 +62,9 @@ tenantsRoutes.get('/:id', async (c) => {
 });
 
 // Create tenant (invalidates cache)
-tenantsRoutes.post('/', async (c) => {
+tenantsRoutes.post('/', validateJson(CreateTenantSchema), async (c) => {
   try {
-    const { name, slug } = await c.req.json<{ name: string; slug: string }>();
-
-    if (!name || !slug) {
-      return c.json({ error: 'Name and slug are required' }, 400);
-    }
+    const { name, slug } = c.req.valid('json');
 
     const db = createDb(c.env.DB);
     const [tenant] = await db.insert(tenants).values({ name, slug }).returning();
@@ -83,10 +81,10 @@ tenantsRoutes.post('/', async (c) => {
 });
 
 // Update tenant (invalidates cache)
-tenantsRoutes.put('/:id', async (c) => {
-  const id = c.req.param('id');
+tenantsRoutes.put('/:id', validateParam(IdParamSchema), validateJson(UpdateTenantSchema), async (c) => {
+  const { id } = c.req.valid('param');
   try {
-    const { name, status } = await c.req.json<{ name?: string; status?: string }>();
+    const { name, status } = c.req.valid('json');
 
     const db = createDb(c.env.DB);
     const [tenant] = await db
@@ -167,19 +165,10 @@ tenantsRoutes.get('/:id/connections', async (c) => {
 });
 
 // Add connection to tenant (invalidates cache)
-tenantsRoutes.post('/:id/connections', async (c) => {
-  const tenantId = c.req.param('id');
+tenantsRoutes.post('/:id/connections', validateParam(IdParamSchema), validateJson(CreateConnectionSchema), async (c) => {
+  const { id: tenantId } = c.req.valid('param');
   try {
-    const { name, db_type, connection_string, is_primary } = await c.req.json<{
-      name: string;
-      db_type: string;
-      connection_string: string;
-      is_primary?: boolean;
-    }>();
-
-    if (!name || !db_type || !connection_string) {
-      return c.json({ error: 'Name, db_type, and connection_string are required' }, 400);
-    }
+    const { name, db_type, connection_string, is_primary } = c.req.valid('json');
 
     const db = createDb(c.env.DB);
 
@@ -217,16 +206,10 @@ tenantsRoutes.post('/:id/connections', async (c) => {
 });
 
 // Update connection (invalidates cache)
-tenantsRoutes.put('/:id/connections/:connectionId', async (c) => {
-  const connectionId = c.req.param('connectionId');
-  const tenantId = c.req.param('id');
+tenantsRoutes.put('/:id/connections/:connectionId', validateParam(IdConnectionParamSchema), validateJson(UpdateConnectionSchema), async (c) => {
+  const { id: tenantId, connectionId } = c.req.valid('param');
   try {
-    const { name, connection_string, is_primary, status } = await c.req.json<{
-      name?: string;
-      connection_string?: string;
-      is_primary?: boolean;
-      status?: string;
-    }>();
+    const { name, connection_string, is_primary, status } = c.req.valid('json');
 
     const db = createDb(c.env.DB);
 

@@ -6,6 +6,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Mail } from 'lucide-react';
+import { useFormValidation, z } from '@/lib/form-validation';
+
+// Simple schema for forgot password (just email)
+const ForgotPasswordFormSchema = z.object({
+  email: z.string().email('validation.email.invalid'),
+});
+type ForgotPasswordFormInput = z.infer<typeof ForgotPasswordFormSchema>;
 
 export const Route = createFileRoute('/auth/forgot-password')({
   component: ForgotPasswordPage,
@@ -13,42 +20,44 @@ export const Route = createFileRoute('/auth/forgot-password')({
 
 function ForgotPasswordPage() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
+  const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  const form = useFormValidation<ForgotPasswordFormInput>({
+    schema: ForgotPasswordFormSchema,
+    initialValues: {
+      email: '',
+    },
+    onSubmit: async (values) => {
+      setServerError('');
 
-    try {
-      const response = await fetch('/api/auth/forget-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          redirectTo: '/auth/reset-password',
-        }),
-      });
+      try {
+        const response = await fetch('/api/auth/forget-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: values.email,
+            redirectTo: '/auth/reset-password',
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.error || t('auth.errors.genericError'));
-        return;
+        if (!response.ok) {
+          setServerError(data.error || t('auth.errors.genericError'));
+          return;
+        }
+
+        setSubmittedEmail(values.email);
+        setSuccess(true);
+      } catch {
+        setServerError(t('auth.errors.genericError'));
       }
-
-      setSuccess(true);
-    } catch {
-      setError(t('auth.errors.genericError'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
   if (success) {
     return (
@@ -59,7 +68,7 @@ function ForgotPasswordPage() {
           </div>
           <CardTitle className="text-2xl font-bold">{t('auth.forgotPassword.success.title')}</CardTitle>
           <CardDescription>
-            {t('auth.forgotPassword.success.description')} <strong>{email}</strong>
+            {t('auth.forgotPassword.success.description')} <strong>{submittedEmail}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-center">
@@ -71,7 +80,10 @@ function ForgotPasswordPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => setSuccess(false)}
+            onClick={() => {
+              setSuccess(false);
+              form.reset();
+            }}
           >
             {t('auth.forgotPassword.success.tryAnother')}
           </Button>
@@ -95,11 +107,11 @@ function ForgotPasswordPage() {
           {t('auth.forgotPassword.description')}
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={form.handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
+          {serverError && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
+              {serverError}
             </div>
           )}
           <div className="space-y-2">
@@ -108,16 +120,17 @@ function ForgotPasswordPage() {
               id="email"
               type="email"
               placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
+              {...form.getFieldProps('email')}
+              disabled={form.isSubmitting}
             />
+            {form.touched.email && form.errors.email && (
+              <p className="text-sm text-destructive">{form.errors.email}</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
+          <Button type="submit" className="w-full" disabled={form.isSubmitting}>
+            {form.isSubmitting ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
           </Button>
           <Link
             to="/auth/signin"
