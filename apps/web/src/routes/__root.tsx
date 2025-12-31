@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useSession } from '@/lib/auth-client';
-import '@/i18n'; // Initialize i18n
+import { getCurrentLanguage } from '@/i18n';
 import stylesUrl from '@/styles/global.css?url';
 
 export const Route = createRootRoute({
@@ -31,13 +31,19 @@ function RootComponent() {
   const location = useLocation();
   const isAppRoute = location.pathname.startsWith('/app');
   const isAuthRoute = location.pathname.startsWith('/auth');
+  
+  // Normalize language code to prevent hydration mismatch (e.g., 'es-ES' -> 'es')
+  const normalizedLang = getCurrentLanguage();
 
   return (
-    <html lang={i18n.language}>
+    <html lang={normalizedLang}>
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body 
+        className="min-h-screen bg-background font-sans antialiased"
+        suppressHydrationWarning
+      >
         {/* Background gradient effect */}
         <div className="pointer-events-none fixed inset-0 -z-10">
           <div className="absolute left-1/4 top-0 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
