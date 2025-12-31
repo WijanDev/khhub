@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, MoreHorizontal, RefreshCw, AlertCircle, Users } from 'lucide-react';
+import { usersApi } from '@/lib/api-client';
 
 export const Route = createFileRoute('/app/users')({
   component: UsersPage,
@@ -13,12 +14,14 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role?: string;
-  image?: string | null;
-  emailVerified?: boolean;
-  banned?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  role: 'user' | 'admin' | null;
+  image: string | null;
+  emailVerified: boolean | null;
+  banned: boolean | null;
+  banReason: string | null;
+  banExpires: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 function UsersPage() {
@@ -31,7 +34,8 @@ function UsersPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/users');
+      // Using Hono RPC client for type-safe API calls
+      const response = await usersApi.$get();
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
@@ -148,12 +152,12 @@ function UsersPage() {
                     </span>
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        user.banned
+                        user.banned === true
                           ? 'bg-red-500/10 text-red-500'
                           : 'bg-green-500/10 text-green-500'
                       }`}
                     >
-                      {user.banned ? 'banned' : 'active'}
+                      {user.banned === true ? 'banned' : 'active'}
                     </span>
                     <Button variant="ghost" size="icon">
                       <MoreHorizontal className="h-4 w-4" />

@@ -30,21 +30,18 @@ app.get('/health', (c) => {
   });
 });
 
-// API routes
-const api = new Hono<{ Bindings: Env; Variables: Variables }>();
-
-// Hello endpoint for testing
-api.get('/hello', (c) => {
-  return c.json({ message: 'Hello from Hono API!' });
-});
-
-// Auth routes (handled by Better Auth)
-api.route('/auth', authRoutes);
-
-// Mount route modules
-api.route('/tenants', tenantsRoutes);
-api.route('/users', usersRoutes);
-api.route('/storage', storageRoutes);
+// API routes - chain routes for proper type inference (Hono RPC)
+const api = new Hono<{ Bindings: Env; Variables: Variables }>()
+  // Hello endpoint for testing
+  .get('/hello', (c) => {
+    return c.json({ message: 'Hello from Hono API!' });
+  })
+  // Auth routes (handled by Better Auth)
+  .route('/auth', authRoutes)
+  // Mount route modules
+  .route('/tenants', tenantsRoutes)
+  .route('/users', usersRoutes)
+  .route('/storage', storageRoutes);
 
 // Mount API under /api prefix
 app.route('/api', api);
@@ -59,6 +56,9 @@ app.onError((err, c) => {
   console.error('Error:', err);
   return c.json({ error: 'Internal Server Error' }, 500);
 });
+
+// Export the API type for RPC client
+export type ApiType = typeof api;
 
 // Export for Cloudflare Workers
 export default app;

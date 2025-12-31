@@ -2,10 +2,10 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { createStorageManager, StoragePaths, AllowedFileTypes, MaxFileSizes } from '../lib/storage';
 
-const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
-
-// Upload file for a tenant
-storageRoutes.post('/tenants/:tenantId/files', async (c) => {
+// Chain routes for proper type inference (Hono RPC)
+const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
+  // Upload file for a tenant
+  .post('/tenants/:tenantId/files', async (c) => {
   const tenantId = c.req.param('tenantId');
 
   try {
@@ -47,10 +47,9 @@ storageRoutes.post('/tenants/:tenantId/files', async (c) => {
     console.error('Error uploading file:', error);
     return c.json({ error: 'Failed to upload file' }, 500);
   }
-});
-
-// List files for a tenant
-storageRoutes.get('/tenants/:tenantId/files', async (c) => {
+})
+  // List files for a tenant
+  .get('/tenants/:tenantId/files', async (c) => {
   const tenantId = c.req.param('tenantId');
   const cursor = c.req.query('cursor');
   const limit = parseInt(c.req.query('limit') || '50');
@@ -72,10 +71,9 @@ storageRoutes.get('/tenants/:tenantId/files', async (c) => {
     console.error('Error listing files:', error);
     return c.json({ error: 'Failed to list files' }, 500);
   }
-});
-
-// Download file
-storageRoutes.get('/files/*', async (c) => {
+})
+  // Download file
+  .get('/files/*', async (c) => {
   const path = c.req.path.replace('/api/storage/files/', '');
 
   try {
@@ -98,10 +96,9 @@ storageRoutes.get('/files/*', async (c) => {
     console.error('Error downloading file:', error);
     return c.json({ error: 'Failed to download file' }, 500);
   }
-});
-
-// Get file info (metadata only)
-storageRoutes.get('/files/info/*', async (c) => {
+})
+  // Get file info (metadata only)
+  .get('/files/info/*', async (c) => {
   const path = c.req.path.replace('/api/storage/files/info/', '');
 
   try {
@@ -126,10 +123,9 @@ storageRoutes.get('/files/info/*', async (c) => {
     console.error('Error getting file info:', error);
     return c.json({ error: 'Failed to get file info' }, 500);
   }
-});
-
-// Delete file
-storageRoutes.delete('/files/*', async (c) => {
+})
+  // Delete file
+  .delete('/files/*', async (c) => {
   const path = c.req.path.replace('/api/storage/files/', '');
 
   try {
@@ -148,10 +144,9 @@ storageRoutes.delete('/files/*', async (c) => {
     console.error('Error deleting file:', error);
     return c.json({ error: 'Failed to delete file' }, 500);
   }
-});
-
-// Upload user avatar
-storageRoutes.post('/users/:userId/avatar', async (c) => {
+})
+  // Upload user avatar
+  .post('/users/:userId/avatar', async (c) => {
   const userId = c.req.param('userId');
 
   try {
@@ -198,10 +193,9 @@ storageRoutes.post('/users/:userId/avatar', async (c) => {
     console.error('Error uploading avatar:', error);
     return c.json({ error: 'Failed to upload avatar' }, 500);
   }
-});
-
-// Get user avatar
-storageRoutes.get('/users/:userId/avatar', async (c) => {
+})
+  // Get user avatar
+  .get('/users/:userId/avatar', async (c) => {
   const userId = c.req.param('userId');
 
   try {
@@ -225,10 +219,9 @@ storageRoutes.get('/users/:userId/avatar', async (c) => {
     console.error('Error getting avatar:', error);
     return c.json({ error: 'Failed to get avatar' }, 500);
   }
-});
-
-// Delete user avatar
-storageRoutes.delete('/users/:userId/avatar', async (c) => {
+})
+  // Delete user avatar
+  .delete('/users/:userId/avatar', async (c) => {
   const userId = c.req.param('userId');
 
   try {
