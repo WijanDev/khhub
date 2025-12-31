@@ -68,11 +68,12 @@ export interface ValidationError {
 
 /**
  * Convert Zod errors to our format
+ * Note: Zod 4 uses .issues instead of .errors
  */
 function formatZodErrors(error: ZodError): ValidationError[] {
-  return error.errors.map((err) => ({
-    path: err.path.join('.'),
-    message: err.message,
+  return error.issues.map((issue) => ({
+    path: issue.path.join('.'),
+    message: issue.message,
   }));
 }
 

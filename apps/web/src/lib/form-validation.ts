@@ -49,7 +49,8 @@ export interface UseFormValidationReturn<T> {
  */
 function formatZodErrors(error: ZodError, translateFn?: (key: string) => string): FormErrors {
   const errors: FormErrors = {};
-  for (const issue of error.errors) {
+  // Zod 4 uses .issues instead of .errors
+  for (const issue of error.issues) {
     const path = issue.path.join('.');
     if (!errors[path]) {
       // Translate the error message if it looks like a translation key
@@ -139,7 +140,8 @@ export function useFormValidation<T extends Record<string, unknown>>({
         // If no field schema found, validate the whole object
         const result = schema.safeParse(values);
         if (!result.success) {
-          const fieldError = result.error.errors.find((e) => e.path.includes(field as string));
+          // Zod 4 uses .issues instead of .errors
+          const fieldError = result.error.issues.find((e) => e.path.includes(field as string));
           if (fieldError) {
             setErrors((prev) => ({
               ...prev,
@@ -153,7 +155,8 @@ export function useFormValidation<T extends Record<string, unknown>>({
 
       const result = fieldSchema.safeParse(fieldValue);
       if (!result.success) {
-        const message = result.error.errors[0]?.message || 'validation.invalid';
+        // Zod 4 uses .issues instead of .errors
+        const message = result.error.issues[0]?.message || 'validation.invalid';
         setErrors((prev) => ({
           ...prev,
           [field]: translateMessage(message),
@@ -254,7 +257,8 @@ export function validateValue<T>(schema: ZodSchema<T>, value: unknown): { valid:
   if (result.success) {
     return { valid: true };
   }
-  return { valid: false, error: result.error.errors[0]?.message };
+  // Zod 4 uses .issues instead of .errors
+  return { valid: false, error: result.error.issues[0]?.message };
 }
 
 /**
