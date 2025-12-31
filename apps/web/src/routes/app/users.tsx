@@ -1,56 +1,29 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, MoreHorizontal, RefreshCw, AlertCircle, Users } from 'lucide-react';
-import { usersApi } from '@/lib/api-client';
+import { useUsersSuspense, prefetchUsers, userKeys } from '@/lib/queries/users';
+import { getQueryClientFromContext } from '@/lib/router-utils';
 
 export const Route = createFileRoute('/app/users')({
+  loader: async ({ context }) => {
+    // Prefetch users data in the loader
+    const queryClient = getQueryClientFromContext(context);
+    if (queryClient) {
+      await prefetchUsers(queryClient);
+    }
+  },
   component: UsersPage,
 });
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin' | null;
-  image: string | null;
-  emailVerified: boolean | null;
-  banned: boolean | null;
-  banReason: string | null;
-  banExpires: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 function UsersPage() {
   const { t } = useTranslation();
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchUsers = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Using Hono RPC client for type-safe API calls
-      const response = await usersApi.$get();
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const data = await response.json();
-      setUsers(data.users || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const queryClient = useQueryClient();
+  // Get data with suspense (uses prefetched data from loader)
+  const { data } = useUsersSuspense();
+  const users = data.users;
 
   return (
     <div className="space-y-8">
@@ -61,8 +34,12 @@ function UsersPage() {
           <p className="text-muted-foreground">{t('app.users.description')}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={fetchUsers} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => queryClient.invalidateQueries({ queryKey: userKeys.list() })}
+          >
+            <RefreshCw className="h-4 w-4" />
           </Button>
           <Button>
             <Plus className="mr-2 h-4 w-4" />
@@ -71,36 +48,8 @@ function UsersPage() {
         </div>
       </div>
 
-      {/* Error State */}
-      {error && (
-        <Card className="border-destructive/50 bg-destructive/10">
-          <CardContent className="flex items-center gap-4 p-4">
-            <AlertCircle className="h-5 w-5 text-destructive" />
-            <div>
-              <p className="font-medium text-destructive">{t('app.users.errorLoading')}</p>
-              <p className="text-sm text-muted-foreground">{error}</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={fetchUsers} className="ml-auto">
-              {t('common.retry')}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Loading State */}
-      {isLoading && !error && (
-        <Card className="border-border/50 bg-card/50">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-center">
-              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Empty State */}
-      {!isLoading && !error && users.length === 0 && (
+      {users.length === 0 && (
         <Card className="border-border/50 bg-card/50">
           <CardContent className="p-8 text-center">
             <Users className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -114,7 +63,7 @@ function UsersPage() {
       )}
 
       {/* Users Table */}
-      {!isLoading && !error && users.length > 0 && (
+      {users.length > 0 && (
         <Card className="border-border/50 bg-card/50">
           <CardHeader>
             <CardTitle>{t('app.users.all')}</CardTitle>

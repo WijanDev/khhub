@@ -36,6 +36,13 @@ i18n
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
       lookupLocalStorage: 'khhub-language',
+      // Normalize detected language codes to prevent hydration mismatches
+      convertDetectedLanguage: (lng: string) => {
+        // Extract base language code (before hyphen) to normalize 'es-ES' -> 'es'
+        const baseLang = lng.split('-')[0];
+        // Validate it's one of our supported languages, otherwise return default
+        return languages.some((l) => l.code === baseLang) ? baseLang : defaultLanguage;
+      },
     },
   });
 
@@ -50,8 +57,13 @@ export function changeLanguage(lng: LanguageCode) {
 
 /**
  * Get the current language
+ * Normalizes language codes (e.g., 'es-ES' -> 'es') to prevent hydration mismatches
  */
 export function getCurrentLanguage(): LanguageCode {
-  return (i18n.language as LanguageCode) || defaultLanguage;
+  const lang = i18n.language || defaultLanguage;
+  // Extract base language code (before hyphen) to normalize 'es-ES' -> 'es'
+  const baseLang = lang.split('-')[0] as LanguageCode;
+  // Validate it's one of our supported languages, otherwise fallback to default
+  return languages.some((l) => l.code === baseLang) ? baseLang : defaultLanguage;
 }
 
