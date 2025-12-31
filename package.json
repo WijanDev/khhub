@@ -16,8 +16,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "typescript": "^5.7.2"
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=20.0.0"
