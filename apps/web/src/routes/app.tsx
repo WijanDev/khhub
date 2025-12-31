@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { authClient, useSession, signOut } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,17 +25,18 @@ export const Route = createFileRoute('/app')({
   component: AppLayout,
 });
 
-const sidebarLinks = [
-  { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/app/tenants', label: 'Tenants', icon: Building2 },
-  { to: '/app/users', label: 'Users', icon: Users },
-  { to: '/app/settings', label: 'Settings', icon: Settings },
-];
-
 function AppLayout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const sidebarLinks = [
+    { to: '/app/dashboard', label: t('app.sidebar.dashboard'), icon: LayoutDashboard },
+    { to: '/app/tenants', label: t('app.sidebar.tenants'), icon: Building2 },
+    { to: '/app/users', label: t('app.sidebar.users'), icon: Users },
+    { to: '/app/settings', label: t('app.sidebar.settings'), icon: Settings },
+  ] as const;
 
   const handleSignOut = async () => {
     await signOut();
@@ -44,7 +46,7 @@ function AppLayout() {
   if (isPending) {
     return (
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="animate-pulse text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }
@@ -119,7 +121,7 @@ function AppLayout() {
             onClick={handleSignOut}
           >
             <LogOut className="h-4 w-4" />
-            Sign out
+            {t('nav.signOut')}
           </Button>
         </div>
       </aside>
@@ -131,4 +133,3 @@ function AppLayout() {
     </div>
   );
 }
-

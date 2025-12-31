@@ -1,8 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreHorizontal, RefreshCw, AlertCircle } from 'lucide-react';
+import { Plus, MoreHorizontal, RefreshCw, AlertCircle, Users } from 'lucide-react';
 
 export const Route = createFileRoute('/app/users')({
   component: UsersPage,
@@ -21,6 +22,7 @@ interface User {
 }
 
 function UsersPage() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +53,8 @@ function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground">Manage users and permissions</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('app.users.title')}</h1>
+          <p className="text-muted-foreground">{t('app.users.description')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="icon" onClick={fetchUsers} disabled={isLoading}>
@@ -60,7 +62,7 @@ function UsersPage() {
           </Button>
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            Invite User
+            {t('app.users.invite')}
           </Button>
         </div>
       </div>
@@ -71,11 +73,11 @@ function UsersPage() {
           <CardContent className="flex items-center gap-4 p-4">
             <AlertCircle className="h-5 w-5 text-destructive" />
             <div>
-              <p className="font-medium text-destructive">Error loading users</p>
+              <p className="font-medium text-destructive">{t('app.users.errorLoading')}</p>
               <p className="text-sm text-muted-foreground">{error}</p>
             </div>
             <Button variant="outline" size="sm" onClick={fetchUsers} className="ml-auto">
-              Retry
+              {t('common.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -87,7 +89,7 @@ function UsersPage() {
           <CardContent className="p-8">
             <div className="flex items-center justify-center">
               <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Loading users...</span>
+              <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
             </div>
           </CardContent>
         </Card>
@@ -97,10 +99,11 @@ function UsersPage() {
       {!isLoading && !error && users.length === 0 && (
         <Card className="border-border/50 bg-card/50">
           <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">No users found</p>
+            <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+            <p className="mt-4 text-muted-foreground">{t('app.users.empty')}</p>
             <Button className="mt-4">
               <Plus className="mr-2 h-4 w-4" />
-              Invite your first user
+              {t('app.users.inviteFirst')}
             </Button>
           </CardContent>
         </Card>
@@ -110,9 +113,9 @@ function UsersPage() {
       {!isLoading && !error && users.length > 0 && (
         <Card className="border-border/50 bg-card/50">
           <CardHeader>
-            <CardTitle>All Users</CardTitle>
+            <CardTitle>{t('app.users.all')}</CardTitle>
             <CardDescription>
-              A list of all users in your organization ({users.length} total)
+              {t('app.users.allDescription')} ({t('app.users.total', { count: users.length })})
             </CardDescription>
           </CardHeader>
           <CardContent>

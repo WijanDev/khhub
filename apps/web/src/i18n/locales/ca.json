@@ -1,0 +1,209 @@
+{
+  "common": {
+    "loading": "Carregant...",
+    "error": "Error",
+    "retry": "Reintentar",
+    "save": "Desar",
+    "cancel": "Cancel·lar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Cercar",
+    "noResults": "No s'han trobat resultats",
+    "backToHome": "Tornar a l'inici",
+    "copyright": "© {{year}} KH Hub. Construït amb Hono + TanStack Start."
+  },
+  "nav": {
+    "home": "Inici",
+    "about": "Sobre nosaltres",
+    "signIn": "Iniciar sessió",
+    "signUp": "Registrar-se",
+    "signOut": "Tancar sessió",
+    "getStarted": "Començar",
+    "dashboard": "Panell",
+    "goToDashboard": "Anar al panell"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Plataforma Multi-tenant",
+      "title": "La plataforma de gestió de dades de nova generació",
+      "description": "Gestiona múltiples organitzacions, connexions de dades i usuaris amb la nostra infraestructura moderna i escalable."
+    },
+    "features": {
+      "multiTenant": {
+        "title": "Multi-Tenant",
+        "description": "Aïlla les dades entre organitzacions amb seguretat de nivell empresarial."
+      },
+      "dynamicConnections": {
+        "title": "Connexions Dinàmiques",
+        "description": "Connecta a múltiples fonts de dades per tenant."
+      },
+      "cachingLayer": {
+        "title": "Capa de Memòria Cau",
+        "description": "Accés a dades ultraràpid amb memòria cau KV integrada."
+      },
+      "objectStorage": {
+        "title": "Emmagatzematge d'Objectes",
+        "description": "Gestiona fitxers i actius amb emmagatzematge R2."
+      }
+    },
+    "cta": {
+      "title": "Preparat per començar?",
+      "description": "Uneix-te a milers d'equips que ja utilitzen KH Hub.",
+      "button": "Crear compte gratuït"
+    }
+  },
+  "about": {
+    "title": "Sobre KH Hub",
+    "description": "Construint el futur de la gestió de dades multi-tenant",
+    "techStack": {
+      "title": "Stack Tecnològic",
+      "description": "Construït amb tecnologies modernes a l'edge"
+    },
+    "mission": {
+      "title": "La Nostra Missió",
+      "description": "Proporcionar una infraestructura de dades segura, escalable i eficient per a equips moderns."
+    }
+  },
+  "auth": {
+    "signIn": {
+      "title": "Benvingut de nou",
+      "description": "Introdueix les teves credencials per iniciar sessió",
+      "email": "Correu electrònic",
+      "password": "Contrasenya",
+      "forgotPassword": "Has oblidat la contrasenya?",
+      "submit": "Iniciar sessió",
+      "submitting": "Iniciant sessió...",
+      "noAccount": "No tens compte?",
+      "createAccount": "Crear compte"
+    },
+    "signUp": {
+      "title": "Crear compte",
+      "description": "Introdueix les teves dades per començar",
+      "name": "Nom",
+      "email": "Correu electrònic",
+      "password": "Contrasenya",
+      "confirmPassword": "Confirmar contrasenya",
+      "submit": "Crear compte",
+      "submitting": "Creant compte...",
+      "hasAccount": "Ja tens compte?",
+      "signIn": "Iniciar sessió"
+    },
+    "forgotPassword": {
+      "title": "Has oblidat la contrasenya?",
+      "description": "Introdueix el teu correu i t'enviarem un enllaç de recuperació",
+      "email": "Correu electrònic",
+      "submit": "Enviar enllaç",
+      "submitting": "Enviant...",
+      "backToSignIn": "Tornar a iniciar sessió",
+      "success": {
+        "title": "Revisa el teu correu",
+        "description": "Hem enviat un enllaç de recuperació a",
+        "hint": "No has rebut el correu? Revisa la carpeta de correu brossa o intenta-ho de nou.",
+        "tryAnother": "Intentar amb un altre correu"
+      }
+    },
+    "resetPassword": {
+      "title": "Restablir contrasenya",
+      "description": "Introdueix la teva nova contrasenya",
+      "newPassword": "Nova contrasenya",
+      "confirmPassword": "Confirmar nova contrasenya",
+      "submit": "Restablir contrasenya",
+      "submitting": "Restablint...",
+      "backToSignIn": "Tornar a iniciar sessió",
+      "success": {
+        "title": "Contrasenya restablerta!",
+        "description": "La teva contrasenya s'ha restablert correctament.",
+        "signIn": "Iniciar sessió amb nova contrasenya"
+      },
+      "invalidLink": {
+        "title": "Enllaç invàlid",
+        "description": "Aquest enllaç de recuperació és invàlid o ha expirat.",
+        "requestNew": "Sol·licitar nou enllaç"
+      }
+    },
+    "errors": {
+      "invalidCredentials": "Credencials invàlides",
+      "emailExists": "Aquest correu ja està registrat",
+      "passwordMismatch": "Les contrasenyes no coincideixen",
+      "passwordTooShort": "La contrasenya ha de tenir almenys 8 caràcters",
+      "genericError": "S'ha produït un error inesperat"
+    }
+  },
+  "app": {
+    "sidebar": {
+      "dashboard": "Panell",
+      "tenants": "Organitzacions",
+      "users": "Usuaris",
+      "settings": "Configuració"
+    },
+    "dashboard": {
+      "title": "Panell",
+      "welcome": "Benvingut, {{name}}! Això és el que està passant.",
+      "stats": {
+        "totalUsers": "Total d'usuaris",
+        "activeTenants": "Organitzacions actives",
+        "totalSessions": "Total de sessions",
+        "growthRate": "Taxa de creixement"
+      },
+      "recentActivity": {
+        "title": "Activitat recent",
+        "description": "Últimes accions al teu espai de treball"
+      },
+      "quickActions": {
+        "title": "Accions ràpides",
+        "description": "Tasques comunes i accessos directes",
+        "inviteTeam": "Convidar membre de l'equip",
+        "createTenant": "Crear nova organització",
+        "viewAnalytics": "Veure analítiques"
+      },
+      "fromLastMonth": "des del mes passat"
+    },
+    "tenants": {
+      "title": "Organitzacions",
+      "description": "Gestiona les organitzacions",
+      "create": "Crear organització",
+      "empty": "No s'han trobat organitzacions",
+      "createFirst": "Crea la teva primera organització",
+      "createdAt": "Creat el {{date}}"
+    },
+    "users": {
+      "title": "Usuaris",
+      "description": "Gestiona usuaris i permisos",
+      "invite": "Convidar usuari",
+      "all": "Tots els usuaris",
+      "allDescription": "Llista de tots els usuaris a la teva organització",
+      "total": "{{count}} en total",
+      "empty": "No s'han trobat usuaris",
+      "inviteFirst": "Convida al teu primer usuari",
+      "errorLoading": "Error en carregar usuaris"
+    },
+    "settings": {
+      "title": "Configuració",
+      "description": "Gestiona la configuració del teu compte",
+      "profile": {
+        "title": "Perfil",
+        "description": "Actualitza la teva informació personal",
+        "name": "Nom",
+        "email": "Correu electrònic",
+        "emailHint": "El correu no es pot canviar. Contacta amb suport si cal.",
+        "save": "Desar canvis"
+      },
+      "security": {
+        "title": "Seguretat",
+        "description": "Gestiona la teva contrasenya i configuració de seguretat",
+        "currentPassword": "Contrasenya actual",
+        "newPassword": "Nova contrasenya",
+        "confirmPassword": "Confirmar nova contrasenya",
+        "update": "Actualitzar contrasenya"
+      },
+      "danger": {
+        "title": "Zona de perill",
+        "description": "Accions irreversibles i destructives",
+        "deleteAccount": "Eliminar compte",
+        "deleteAccountDescription": "Eliminar permanentment el teu compte i totes les dades associades."
+      }
+    }
+  }
+}
+

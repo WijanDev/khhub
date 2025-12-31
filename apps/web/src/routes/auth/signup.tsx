@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/auth/signup')({
 });
 
 function SignUpPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,12 +26,12 @@ function SignUpPage() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.errors.passwordMismatch'));
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError(t('auth.errors.passwordTooShort'));
       return;
     }
 
@@ -43,13 +45,13 @@ function SignUpPage() {
       });
 
       if (result.error) {
-        setError(result.error.message || 'Failed to create account');
+        setError(result.error.message || t('auth.errors.genericError'));
         return;
       }
 
       navigate({ to: '/app/dashboard' });
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch {
+      setError(t('auth.errors.genericError'));
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +60,8 @@ function SignUpPage() {
   return (
     <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-        <CardDescription>Enter your details to get started</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t('auth.signUp.title')}</CardTitle>
+        <CardDescription>{t('auth.signUp.description')}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -69,7 +71,7 @@ function SignUpPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t('auth.signUp.name')}</Label>
             <Input
               id="name"
               type="text"
@@ -81,7 +83,7 @@ function SignUpPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.signUp.email')}</Label>
             <Input
               id="email"
               type="email"
@@ -93,7 +95,7 @@ function SignUpPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('auth.signUp.password')}</Label>
             <Input
               id="password"
               type="password"
@@ -105,7 +107,7 @@ function SignUpPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t('auth.signUp.confirmPassword')}</Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -119,12 +121,12 @@ function SignUpPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating account...' : 'Create account'}
+            {isLoading ? t('auth.signUp.submitting') : t('auth.signUp.submit')}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            {t('auth.signUp.hasAccount')}{' '}
             <Link to="/auth/signin" className="font-medium text-primary hover:underline">
-              Sign in
+              {t('auth.signUp.signIn')}
             </Link>
           </p>
         </CardFooter>
@@ -132,4 +134,3 @@ function SignUpPage() {
     </Card>
   );
 }
-

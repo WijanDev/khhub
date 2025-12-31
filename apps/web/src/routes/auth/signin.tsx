@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/auth/signin')({
 });
 
 function SignInPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,13 +31,13 @@ function SignInPage() {
       });
 
       if (result.error) {
-        setError(result.error.message || 'Failed to sign in');
+        setError(t('auth.errors.invalidCredentials'));
         return;
       }
 
       navigate({ to: '/app/dashboard' });
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch {
+      setError(t('auth.errors.genericError'));
     } finally {
       setIsLoading(false);
     }
@@ -44,8 +46,8 @@ function SignInPage() {
   return (
     <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-        <CardDescription>Enter your credentials to sign in</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t('auth.signIn.title')}</CardTitle>
+        <CardDescription>{t('auth.signIn.description')}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -55,7 +57,7 @@ function SignInPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.signIn.email')}</Label>
             <Input
               id="email"
               type="email"
@@ -68,12 +70,12 @@ function SignInPage() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.signIn.password')}</Label>
               <Link
                 to="/auth/forgot-password"
                 className="text-xs text-muted-foreground hover:text-primary"
               >
-                Forgot password?
+                {t('auth.signIn.forgotPassword')}
               </Link>
             </div>
             <Input
@@ -89,12 +91,12 @@ function SignInPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign in'}
+            {isLoading ? t('auth.signIn.submitting') : t('auth.signIn.submit')}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
+            {t('auth.signIn.noAccount')}{' '}
             <Link to="/auth/signup" className="font-medium text-primary hover:underline">
-              Sign up
+              {t('auth.signIn.createAccount')}
             </Link>
           </p>
         </CardFooter>
@@ -102,4 +104,3 @@ function SignInPage() {
     </Card>
   );
 }
-

@@ -1,7 +1,10 @@
 import { createRootRoute, Link, Outlet, useLocation } from '@tanstack/react-router';
 import { HeadContent, Scripts } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { useSession, signOut } from '@/lib/auth-client';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { useSession } from '@/lib/auth-client';
+import '@/i18n'; // Initialize i18n
 import stylesUrl from '@/styles/global.css?url';
 
 export const Route = createRootRoute({
@@ -24,12 +27,13 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  const { i18n } = useTranslation();
   const location = useLocation();
   const isAppRoute = location.pathname.startsWith('/app');
   const isAuthRoute = location.pathname.startsWith('/auth');
 
   return (
-    <html lang="en">
+    <html lang={i18n.language}>
       <head>
         <HeadContent />
       </head>
@@ -57,11 +61,7 @@ function RootComponent() {
           )}
 
           {/* Footer - Only show on public pages */}
-          {!isAppRoute && (
-            <footer className="border-t border-border/40 py-6 text-center text-sm text-muted-foreground">
-              <p>© {new Date().getFullYear()} KH Hub. Built with Hono + TanStack Start.</p>
-            </footer>
-          )}
+          {!isAppRoute && <Footer />}
         </div>
         <Scripts />
       </body>
@@ -70,6 +70,7 @@ function RootComponent() {
 }
 
 function PublicHeader({ isAuthRoute }: { isAuthRoute: boolean }) {
+  const { t } = useTranslation();
   const { data: session, isPending } = useSession();
 
   return (
@@ -89,7 +90,7 @@ function PublicHeader({ isAuthRoute }: { isAuthRoute: boolean }) {
                   to="/"
                   activeProps={{ className: 'bg-accent text-accent-foreground' }}
                 >
-                  Home
+                  {t('nav.home')}
                 </Link>
               </Button>
               <Button variant="ghost" size="sm" asChild>
@@ -97,26 +98,29 @@ function PublicHeader({ isAuthRoute }: { isAuthRoute: boolean }) {
                   to="/about"
                   activeProps={{ className: 'bg-accent text-accent-foreground' }}
                 >
-                  About
+                  {t('nav.about')}
                 </Link>
               </Button>
             </>
           )}
+
+          {/* Language Switcher */}
+          <LanguageSwitcher variant="compact" />
 
           {/* Auth buttons */}
           {!isPending && (
             <>
               {session ? (
                 <Button variant="default" size="sm" asChild>
-                  <Link to="/app/dashboard">Go to Dashboard</Link>
+                  <Link to="/app/dashboard">{t('nav.goToDashboard')}</Link>
                 </Button>
               ) : (
                 <>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/auth/signin">Sign in</Link>
+                    <Link to="/auth/signin">{t('nav.signIn')}</Link>
                   </Button>
                   <Button variant="default" size="sm" asChild>
-                    <Link to="/auth/signup">Get Started</Link>
+                    <Link to="/auth/signup">{t('nav.getStarted')}</Link>
                   </Button>
                 </>
               )}
@@ -129,6 +133,8 @@ function PublicHeader({ isAuthRoute }: { isAuthRoute: boolean }) {
 }
 
 function AppHeader() {
+  const { t } = useTranslation();
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
       <nav className="flex items-center justify-between px-6 py-4">
@@ -139,11 +145,22 @@ function AppHeader() {
           KH Hub
         </Link>
         <div className="flex items-center gap-2">
+          <LanguageSwitcher variant="compact" />
           <Button variant="outline" size="sm" asChild>
-            <Link to="/">Back to Home</Link>
+            <Link to="/">{t('common.backToHome')}</Link>
           </Button>
         </div>
       </nav>
     </header>
+  );
+}
+
+function Footer() {
+  const { t } = useTranslation();
+
+  return (
+    <footer className="border-t border-border/40 py-6 text-center text-sm text-muted-foreground">
+      <p>{t('common.copyright', { year: new Date().getFullYear() })}</p>
+    </footer>
   );
 }
