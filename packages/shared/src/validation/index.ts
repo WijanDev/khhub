@@ -68,7 +68,6 @@ export interface ValidationError {
 
 /**
  * Convert Zod errors to our format
- * Note: Zod 4 uses .issues instead of .errors
  */
 function formatZodErrors(error: ZodError): ValidationError[] {
   return error.issues.map((issue) => ({
