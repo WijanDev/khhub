@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
+import { tenantsApi } from '@/lib/api-client';
 
 export const Route = createFileRoute('/app/tenants')({
   component: TenantsPage,
@@ -28,7 +29,8 @@ function TenantsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/tenants');
+      // Using Hono RPC client for type-safe API calls
+      const response = await tenantsApi.$get();
       if (!response.ok) {
         throw new Error('Failed to fetch tenants');
       }
