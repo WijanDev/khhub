@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,65 +16,66 @@ export const Route = createFileRoute('/app/dashboard')({
   component: DashboardPage,
 });
 
-const stats = [
-  {
-    title: 'Total Users',
-    value: '2,543',
-    change: '+12.5%',
-    trend: 'up',
-    icon: Users,
-  },
-  {
-    title: 'Active Tenants',
-    value: '48',
-    change: '+4.3%',
-    trend: 'up',
-    icon: Building2,
-  },
-  {
-    title: 'Total Sessions',
-    value: '12,847',
-    change: '+23.1%',
-    trend: 'up',
-    icon: Activity,
-  },
-  {
-    title: 'Growth Rate',
-    value: '18.2%',
-    change: '-2.4%',
-    trend: 'down',
-    icon: TrendingUp,
-  },
-];
-
-const recentActivity = [
-  { action: 'New user registered', user: 'alice@example.com', time: '2 minutes ago' },
-  { action: 'Tenant created', user: 'admin@example.com', time: '15 minutes ago' },
-  { action: 'Settings updated', user: 'bob@example.com', time: '1 hour ago' },
-  { action: 'New user registered', user: 'charlie@example.com', time: '2 hours ago' },
-  { action: 'Database connection added', user: 'admin@example.com', time: '3 hours ago' },
-];
-
 function DashboardPage() {
+  const { t } = useTranslation();
   const { data: session } = useSession();
+
+  const stats = [
+    {
+      titleKey: 'app.dashboard.stats.totalUsers',
+      value: '2,543',
+      change: '+12.5%',
+      trend: 'up' as const,
+      icon: Users,
+    },
+    {
+      titleKey: 'app.dashboard.stats.activeTenants',
+      value: '48',
+      change: '+4.3%',
+      trend: 'up' as const,
+      icon: Building2,
+    },
+    {
+      titleKey: 'app.dashboard.stats.totalSessions',
+      value: '12,847',
+      change: '+23.1%',
+      trend: 'up' as const,
+      icon: Activity,
+    },
+    {
+      titleKey: 'app.dashboard.stats.growthRate',
+      value: '18.2%',
+      change: '-2.4%',
+      trend: 'down' as const,
+      icon: TrendingUp,
+    },
+  ];
+
+  const recentActivity = [
+    { action: 'New user registered', user: 'alice@example.com', time: '2 minutes ago' },
+    { action: 'Tenant created', user: 'admin@example.com', time: '15 minutes ago' },
+    { action: 'Settings updated', user: 'bob@example.com', time: '1 hour ago' },
+    { action: 'New user registered', user: 'charlie@example.com', time: '2 hours ago' },
+    { action: 'Database connection added', user: 'admin@example.com', time: '3 hours ago' },
+  ];
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('app.dashboard.title')}</h1>
         <p className="text-muted-foreground">
-          Welcome back, {session?.user?.name}! Here's what's happening.
+          {t('app.dashboard.welcome', { name: session?.user?.name })}
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title} className="border-border/50 bg-card/50">
+          <Card key={stat.titleKey} className="border-border/50 bg-card/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
+                {t(stat.titleKey)}
               </CardTitle>
               <stat.icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -90,7 +92,7 @@ function DashboardPage() {
                 >
                   {stat.change}
                 </span>
-                <span className="ml-1 text-muted-foreground">from last month</span>
+                <span className="ml-1 text-muted-foreground">{t('app.dashboard.fromLastMonth')}</span>
               </div>
             </CardContent>
           </Card>
@@ -101,8 +103,8 @@ function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="border-border/50 bg-card/50">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest actions in your workspace</CardDescription>
+            <CardTitle>{t('app.dashboard.recentActivity.title')}</CardTitle>
+            <CardDescription>{t('app.dashboard.recentActivity.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -124,21 +126,21 @@ function DashboardPage() {
 
         <Card className="border-border/50 bg-card/50">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
+            <CardTitle>{t('app.dashboard.quickActions.title')}</CardTitle>
+            <CardDescription>{t('app.dashboard.quickActions.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button className="w-full justify-start" variant="outline">
               <Users className="mr-2 h-4 w-4" />
-              Invite team member
+              {t('app.dashboard.quickActions.inviteTeam')}
             </Button>
             <Button className="w-full justify-start" variant="outline">
               <Building2 className="mr-2 h-4 w-4" />
-              Create new tenant
+              {t('app.dashboard.quickActions.createTenant')}
             </Button>
             <Button className="w-full justify-start" variant="outline">
               <Activity className="mr-2 h-4 w-4" />
-              View analytics
+              {t('app.dashboard.quickActions.viewAnalytics')}
             </Button>
           </CardContent>
         </Card>
@@ -146,4 +148,3 @@ function DashboardPage() {
     </div>
   );
 }
-

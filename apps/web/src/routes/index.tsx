@@ -1,8 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Building2, Database, Zap, HardDrive } from 'lucide-react';
 
 const fetchHello = createServerFn().handler(async () => {
   const res = await fetch('http://localhost:8787/api/hello');
@@ -21,44 +23,29 @@ export const Route = createFileRoute('/')({
 });
 
 function HomePage() {
+  const { t } = useTranslation();
   const data = Route.useLoaderData();
 
   const features = [
     {
-      icon: '⚡',
-      title: 'Hono API',
-      description: 'Ultrafast, lightweight backend with Hono running on Node.js',
-      badge: 'Backend',
+      icon: Building2,
+      titleKey: 'landing.features.multiTenant.title',
+      descriptionKey: 'landing.features.multiTenant.description',
     },
     {
-      icon: '🚀',
-      title: 'TanStack Start',
-      description: 'Full-stack React framework with SSR, streaming, and server functions',
-      badge: 'Frontend',
+      icon: Database,
+      titleKey: 'landing.features.dynamicConnections.title',
+      descriptionKey: 'landing.features.dynamicConnections.description',
     },
     {
-      icon: '📦',
-      title: 'Monorepo',
-      description: 'Organized workspace structure with npm workspaces',
-      badge: 'Architecture',
+      icon: Zap,
+      titleKey: 'landing.features.cachingLayer.title',
+      descriptionKey: 'landing.features.cachingLayer.description',
     },
     {
-      icon: '🎨',
-      title: 'shadcn/ui',
-      description: 'Beautiful, accessible components built with Radix UI and Tailwind',
-      badge: 'UI',
-    },
-    {
-      icon: '🔷',
-      title: 'TypeScript',
-      description: 'End-to-end type safety across the entire codebase',
-      badge: 'Language',
-    },
-    {
-      icon: '⚙️',
-      title: 'Vite',
-      description: 'Lightning fast HMR and optimized production builds',
-      badge: 'Tooling',
+      icon: HardDrive,
+      titleKey: 'landing.features.objectStorage.title',
+      descriptionKey: 'landing.features.objectStorage.description',
     },
   ];
 
@@ -67,21 +54,22 @@ function HomePage() {
       {/* Hero Section */}
       <section className="flex flex-col items-center justify-center py-16 text-center">
         <Badge variant="secondary" className="mb-6">
-          Open Source Monorepo Template
+          {t('landing.hero.badge')}
         </Badge>
         <h1 className="mb-4 bg-gradient-to-r from-primary via-chart-3 to-chart-2 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl lg:text-7xl">
-          Welcome to KH Hub
+          {t('landing.hero.title')}
         </h1>
         <p className="mb-8 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-          A modern full-stack monorepo with Hono API and TanStack Start SSR.
-          Production-ready, type-safe, and beautifully designed.
+          {t('landing.hero.description')}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Button size="lg" className="font-semibold">
-            Get Started
+          <Button size="lg" className="font-semibold" asChild>
+            <Link to="/auth/signup">{t('nav.getStarted')}</Link>
           </Button>
-          <Button size="lg" variant="outline">
-            View on GitHub
+          <Button size="lg" variant="outline" asChild>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              View on GitHub
+            </a>
           </Button>
         </div>
 
@@ -101,49 +89,36 @@ function HomePage() {
 
       {/* Features Section */}
       <section>
-        <div className="mb-10 text-center">
-          <h2 className="mb-3 text-3xl font-bold tracking-tight">
-            Everything you need
-          </h2>
-          <p className="text-muted-foreground">
-            A complete stack for building modern web applications
-          </p>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <Card
-              key={feature.title}
-              className="group border-border/50 bg-card/50 backdrop-blur transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
-            >
-              <CardHeader>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-3xl">{feature.icon}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {feature.badge}
-                  </Badge>
-                </div>
-                <CardTitle className="text-lg">{feature.title}</CardTitle>
-                <CardDescription>{feature.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <Card
+                key={feature.titleKey}
+                className="group border-border/50 bg-card/50 backdrop-blur transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+              >
+                <CardHeader>
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg">{t(feature.titleKey)}</CardTitle>
+                  <CardDescription>{t(feature.descriptionKey)}</CardDescription>
+                </CardHeader>
+              </Card>
+            );
+          })}
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="rounded-2xl border border-border/50 bg-gradient-to-br from-card via-card to-primary/5 p-10 text-center">
-        <h2 className="mb-3 text-2xl font-bold">Ready to build?</h2>
+        <h2 className="mb-3 text-2xl font-bold">{t('landing.cta.title')}</h2>
         <p className="mb-6 text-muted-foreground">
-          Clone the repository and start building your next project in minutes.
+          {t('landing.cta.description')}
         </p>
-        <Card className="mx-auto max-w-lg border-primary/20 bg-background/50">
-          <CardContent className="py-4">
-            <code className="font-mono text-sm">
-              npx degit your-repo/khhub my-app
-            </code>
-          </CardContent>
-        </Card>
+        <Button size="lg" asChild>
+          <Link to="/auth/signup">{t('landing.cta.button')}</Link>
+        </Button>
       </section>
     </div>
   );

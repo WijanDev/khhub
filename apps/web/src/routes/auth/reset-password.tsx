@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/auth/reset-password')({
 });
 
 function ResetPasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { token } = Route.useSearch();
   const [password, setPassword] = useState('');
@@ -29,17 +31,17 @@ function ResetPasswordPage() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.errors.passwordMismatch'));
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError(t('auth.errors.passwordTooShort'));
       return;
     }
 
     if (!token) {
-      setError('Invalid or missing reset token. Please request a new reset link.');
+      setError(t('auth.resetPassword.invalidLink.description'));
       return;
     }
 
@@ -60,13 +62,13 @@ function ResetPasswordPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Failed to reset password');
+        setError(data.error || t('auth.errors.genericError'));
         return;
       }
 
       setSuccess(true);
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch {
+      setError(t('auth.errors.genericError'));
     } finally {
       setIsLoading(false);
     }
@@ -79,14 +81,14 @@ function ResetPasswordPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
             <CheckCircle className="h-6 w-6 text-green-500" />
           </div>
-          <CardTitle className="text-2xl font-bold">Password reset!</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('auth.resetPassword.success.title')}</CardTitle>
           <CardDescription>
-            Your password has been successfully reset.
+            {t('auth.resetPassword.success.description')}
           </CardDescription>
         </CardHeader>
         <CardFooter>
           <Button className="w-full" onClick={() => navigate({ to: '/auth/signin' })}>
-            Sign in with new password
+            {t('auth.resetPassword.success.signIn')}
           </Button>
         </CardFooter>
       </Card>
@@ -97,21 +99,21 @@ function ResetPasswordPage() {
     return (
       <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Invalid link</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('auth.resetPassword.invalidLink.title')}</CardTitle>
           <CardDescription>
-            This password reset link is invalid or has expired.
+            {t('auth.resetPassword.invalidLink.description')}
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex flex-col space-y-4">
           <Button className="w-full" asChild>
-            <Link to="/auth/forgot-password">Request new reset link</Link>
+            <Link to="/auth/forgot-password">{t('auth.resetPassword.invalidLink.requestNew')}</Link>
           </Button>
           <Link
             to="/auth/signin"
             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to sign in
+            {t('auth.resetPassword.backToSignIn')}
           </Link>
         </CardFooter>
       </Card>
@@ -121,8 +123,8 @@ function ResetPasswordPage() {
   return (
     <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">Reset password</CardTitle>
-        <CardDescription>Enter your new password below</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t('auth.resetPassword.title')}</CardTitle>
+        <CardDescription>{t('auth.resetPassword.description')}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -132,7 +134,7 @@ function ResetPasswordPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="password">New Password</Label>
+            <Label htmlFor="password">{t('auth.resetPassword.newPassword')}</Label>
             <Input
               id="password"
               type="password"
@@ -144,7 +146,7 @@ function ResetPasswordPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Label htmlFor="confirmPassword">{t('auth.resetPassword.confirmPassword')}</Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -158,14 +160,14 @@ function ResetPasswordPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Resetting...' : 'Reset password'}
+            {isLoading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
           </Button>
           <Link
             to="/auth/signin"
             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to sign in
+            {t('auth.resetPassword.backToSignIn')}
           </Link>
         </CardFooter>
       </form>

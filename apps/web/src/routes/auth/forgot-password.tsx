@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/auth/forgot-password')({
 });
 
 function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -36,13 +38,13 @@ function ForgotPasswordPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Failed to send reset email');
+        setError(data.error || t('auth.errors.genericError'));
         return;
       }
 
       setSuccess(true);
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch {
+      setError(t('auth.errors.genericError'));
     } finally {
       setIsLoading(false);
     }
@@ -55,14 +57,14 @@ function ForgotPasswordPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Mail className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('auth.forgotPassword.success.title')}</CardTitle>
           <CardDescription>
-            We've sent a password reset link to <strong>{email}</strong>
+            {t('auth.forgotPassword.success.description')} <strong>{email}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-center">
           <p className="text-sm text-muted-foreground">
-            Didn't receive the email? Check your spam folder or try again.
+            {t('auth.forgotPassword.success.hint')}
           </p>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
@@ -71,14 +73,14 @@ function ForgotPasswordPage() {
             className="w-full"
             onClick={() => setSuccess(false)}
           >
-            Try another email
+            {t('auth.forgotPassword.success.tryAnother')}
           </Button>
           <Link
             to="/auth/signin"
             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to sign in
+            {t('auth.forgotPassword.backToSignIn')}
           </Link>
         </CardFooter>
       </Card>
@@ -88,9 +90,9 @@ function ForgotPasswordPage() {
   return (
     <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">Forgot password?</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t('auth.forgotPassword.title')}</CardTitle>
         <CardDescription>
-          Enter your email and we'll send you a reset link
+          {t('auth.forgotPassword.description')}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -101,7 +103,7 @@ function ForgotPasswordPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.forgotPassword.email')}</Label>
             <Input
               id="email"
               type="email"
@@ -115,14 +117,14 @@ function ForgotPasswordPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Sending...' : 'Send reset link'}
+            {isLoading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
           </Button>
           <Link
             to="/auth/signin"
             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to sign in
+            {t('auth.forgotPassword.backToSignIn')}
           </Link>
         </CardFooter>
       </form>

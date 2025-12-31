@@ -1,0 +1,209 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "noResults": "No results found",
+    "backToHome": "Back to home",
+    "copyright": "© {{year}} KH Hub. Built with Hono + TanStack Start."
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "getStarted": "Get Started",
+    "dashboard": "Dashboard",
+    "goToDashboard": "Go to Dashboard"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Multi-tenant Platform",
+      "title": "The Next-Generation Data Management Platform",
+      "description": "Manage multiple organizations, data connections, and users with our modern, scalable infrastructure."
+    },
+    "features": {
+      "multiTenant": {
+        "title": "Multi-Tenant",
+        "description": "Isolate data between organizations with enterprise-grade security."
+      },
+      "dynamicConnections": {
+        "title": "Dynamic Connections",
+        "description": "Connect to multiple data sources per tenant."
+      },
+      "cachingLayer": {
+        "title": "Caching Layer",
+        "description": "Lightning-fast data access with built-in KV caching."
+      },
+      "objectStorage": {
+        "title": "Object Storage",
+        "description": "Manage files and assets with R2 storage."
+      }
+    },
+    "cta": {
+      "title": "Ready to get started?",
+      "description": "Join thousands of teams already using KH Hub.",
+      "button": "Create free account"
+    }
+  },
+  "about": {
+    "title": "About KH Hub",
+    "description": "Building the future of multi-tenant data management",
+    "techStack": {
+      "title": "Tech Stack",
+      "description": "Built with modern edge technologies"
+    },
+    "mission": {
+      "title": "Our Mission",
+      "description": "Provide secure, scalable, and efficient data infrastructure for modern teams."
+    }
+  },
+  "auth": {
+    "signIn": {
+      "title": "Welcome back",
+      "description": "Enter your credentials to sign in",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create account"
+    },
+    "signUp": {
+      "title": "Create an account",
+      "description": "Enter your details to get started",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "forgotPassword": {
+      "title": "Forgot password?",
+      "description": "Enter your email and we'll send you a reset link",
+      "email": "Email",
+      "submit": "Send reset link",
+      "submitting": "Sending...",
+      "backToSignIn": "Back to sign in",
+      "success": {
+        "title": "Check your email",
+        "description": "We've sent a password reset link to",
+        "hint": "Didn't receive the email? Check your spam folder or try again.",
+        "tryAnother": "Try another email"
+      }
+    },
+    "resetPassword": {
+      "title": "Reset password",
+      "description": "Enter your new password below",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "submit": "Reset password",
+      "submitting": "Resetting...",
+      "backToSignIn": "Back to sign in",
+      "success": {
+        "title": "Password reset!",
+        "description": "Your password has been successfully reset.",
+        "signIn": "Sign in with new password"
+      },
+      "invalidLink": {
+        "title": "Invalid link",
+        "description": "This password reset link is invalid or has expired.",
+        "requestNew": "Request new reset link"
+      }
+    },
+    "errors": {
+      "invalidCredentials": "Invalid credentials",
+      "emailExists": "This email is already registered",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "genericError": "An unexpected error occurred"
+    }
+  },
+  "app": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "tenants": "Tenants",
+      "users": "Users",
+      "settings": "Settings"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "welcome": "Welcome back, {{name}}! Here's what's happening.",
+      "stats": {
+        "totalUsers": "Total Users",
+        "activeTenants": "Active Tenants",
+        "totalSessions": "Total Sessions",
+        "growthRate": "Growth Rate"
+      },
+      "recentActivity": {
+        "title": "Recent Activity",
+        "description": "Latest actions in your workspace"
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "description": "Common tasks and shortcuts",
+        "inviteTeam": "Invite team member",
+        "createTenant": "Create new tenant",
+        "viewAnalytics": "View analytics"
+      },
+      "fromLastMonth": "from last month"
+    },
+    "tenants": {
+      "title": "Tenants",
+      "description": "Manage your organization tenants",
+      "create": "Create Tenant",
+      "empty": "No tenants found",
+      "createFirst": "Create your first tenant",
+      "createdAt": "Created {{date}}"
+    },
+    "users": {
+      "title": "Users",
+      "description": "Manage users and permissions",
+      "invite": "Invite User",
+      "all": "All Users",
+      "allDescription": "A list of all users in your organization",
+      "total": "{{count}} total",
+      "empty": "No users found",
+      "inviteFirst": "Invite your first user",
+      "errorLoading": "Error loading users"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your account settings",
+      "profile": {
+        "title": "Profile",
+        "description": "Update your personal information",
+        "name": "Name",
+        "email": "Email",
+        "emailHint": "Email cannot be changed. Contact support if needed.",
+        "save": "Save changes"
+      },
+      "security": {
+        "title": "Security",
+        "description": "Manage your password and security settings",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "update": "Update password"
+      },
+      "danger": {
+        "title": "Danger Zone",
+        "description": "Irreversible and destructive actions",
+        "deleteAccount": "Delete Account",
+        "deleteAccountDescription": "Permanently delete your account and all associated data."
+      }
+    }
+  }
+}
+

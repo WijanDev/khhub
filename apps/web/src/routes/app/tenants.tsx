@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
@@ -18,6 +19,7 @@ interface Tenant {
 }
 
 function TenantsPage() {
+  const { t } = useTranslation();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +50,8 @@ function TenantsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tenants</h1>
-          <p className="text-muted-foreground">Manage your organization tenants</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('app.tenants.title')}</h1>
+          <p className="text-muted-foreground">{t('app.tenants.description')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="icon" onClick={fetchTenants} disabled={isLoading}>
@@ -57,7 +59,7 @@ function TenantsPage() {
           </Button>
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            Create Tenant
+            {t('app.tenants.create')}
           </Button>
         </div>
       </div>
@@ -68,11 +70,11 @@ function TenantsPage() {
           <CardContent className="flex items-center gap-4 p-4">
             <AlertCircle className="h-5 w-5 text-destructive" />
             <div>
-              <p className="font-medium text-destructive">Error loading tenants</p>
+              <p className="font-medium text-destructive">{t('common.error')}</p>
               <p className="text-sm text-muted-foreground">{error}</p>
             </div>
             <Button variant="outline" size="sm" onClick={fetchTenants} className="ml-auto">
-              Retry
+              {t('common.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -103,10 +105,10 @@ function TenantsPage() {
         <Card className="border-border/50 bg-card/50">
           <CardContent className="p-8 text-center">
             <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
-            <p className="mt-4 text-muted-foreground">No tenants found</p>
+            <p className="mt-4 text-muted-foreground">{t('app.tenants.empty')}</p>
             <Button className="mt-4">
               <Plus className="mr-2 h-4 w-4" />
-              Create your first tenant
+              {t('app.tenants.createFirst')}
             </Button>
           </CardContent>
         </Card>
@@ -129,7 +131,9 @@ function TenantsPage() {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    Created {tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : 'N/A'}
+                    {t('app.tenants.createdAt', { 
+                      date: tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : 'N/A' 
+                    })}
                   </span>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${

@@ -1,0 +1,209 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "noResults": "No se encontraron resultados",
+    "backToHome": "Volver al inicio",
+    "copyright": "© {{year}} KH Hub. Construido con Hono + TanStack Start."
+  },
+  "nav": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "signOut": "Cerrar sesión",
+    "getStarted": "Comenzar",
+    "dashboard": "Panel",
+    "goToDashboard": "Ir al panel"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Plataforma Multi-tenant",
+      "title": "La plataforma de gestión de datos de próxima generación",
+      "description": "Gestiona múltiples organizaciones, conexiones de datos y usuarios con nuestra infraestructura moderna y escalable."
+    },
+    "features": {
+      "multiTenant": {
+        "title": "Multi-Tenant",
+        "description": "Aísla datos entre organizaciones con seguridad a nivel empresarial."
+      },
+      "dynamicConnections": {
+        "title": "Conexiones Dinámicas",
+        "description": "Conecta a múltiples fuentes de datos por tenant."
+      },
+      "cachingLayer": {
+        "title": "Capa de Caché",
+        "description": "Acceso a datos ultrarrápido con caché KV integrado."
+      },
+      "objectStorage": {
+        "title": "Almacenamiento de Objetos",
+        "description": "Gestiona archivos y activos con almacenamiento R2."
+      }
+    },
+    "cta": {
+      "title": "¿Listo para comenzar?",
+      "description": "Únete a miles de equipos que ya usan KH Hub.",
+      "button": "Crear cuenta gratis"
+    }
+  },
+  "about": {
+    "title": "Acerca de KH Hub",
+    "description": "Construyendo el futuro de la gestión de datos multi-tenant",
+    "techStack": {
+      "title": "Stack Tecnológico",
+      "description": "Construido con tecnologías modernas en el edge"
+    },
+    "mission": {
+      "title": "Nuestra Misión",
+      "description": "Proporcionar una infraestructura de datos segura, escalable y eficiente para equipos modernos."
+    }
+  },
+  "auth": {
+    "signIn": {
+      "title": "Bienvenido de nuevo",
+      "description": "Ingresa tus credenciales para iniciar sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión...",
+      "noAccount": "¿No tienes cuenta?",
+      "createAccount": "Crear cuenta"
+    },
+    "signUp": {
+      "title": "Crear cuenta",
+      "description": "Ingresa tus datos para comenzar",
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Crear cuenta",
+      "submitting": "Creando cuenta...",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "signIn": "Iniciar sesión"
+    },
+    "forgotPassword": {
+      "title": "¿Olvidaste tu contraseña?",
+      "description": "Ingresa tu correo y te enviaremos un enlace de recuperación",
+      "email": "Correo electrónico",
+      "submit": "Enviar enlace",
+      "submitting": "Enviando...",
+      "backToSignIn": "Volver a iniciar sesión",
+      "success": {
+        "title": "Revisa tu correo",
+        "description": "Hemos enviado un enlace de recuperación a",
+        "hint": "¿No recibiste el correo? Revisa tu carpeta de spam o intenta de nuevo.",
+        "tryAnother": "Intentar con otro correo"
+      }
+    },
+    "resetPassword": {
+      "title": "Restablecer contraseña",
+      "description": "Ingresa tu nueva contraseña",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar nueva contraseña",
+      "submit": "Restablecer contraseña",
+      "submitting": "Restableciendo...",
+      "backToSignIn": "Volver a iniciar sesión",
+      "success": {
+        "title": "¡Contraseña restablecida!",
+        "description": "Tu contraseña ha sido restablecida exitosamente.",
+        "signIn": "Iniciar sesión con nueva contraseña"
+      },
+      "invalidLink": {
+        "title": "Enlace inválido",
+        "description": "Este enlace de recuperación es inválido o ha expirado.",
+        "requestNew": "Solicitar nuevo enlace"
+      }
+    },
+    "errors": {
+      "invalidCredentials": "Credenciales inválidas",
+      "emailExists": "Este correo ya está registrado",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+      "genericError": "Ocurrió un error inesperado"
+    }
+  },
+  "app": {
+    "sidebar": {
+      "dashboard": "Panel",
+      "tenants": "Organizaciones",
+      "users": "Usuarios",
+      "settings": "Configuración"
+    },
+    "dashboard": {
+      "title": "Panel",
+      "welcome": "Bienvenido, {{name}}! Esto es lo que está pasando.",
+      "stats": {
+        "totalUsers": "Total de usuarios",
+        "activeTenants": "Organizaciones activas",
+        "totalSessions": "Total de sesiones",
+        "growthRate": "Tasa de crecimiento"
+      },
+      "recentActivity": {
+        "title": "Actividad reciente",
+        "description": "Últimas acciones en tu espacio de trabajo"
+      },
+      "quickActions": {
+        "title": "Acciones rápidas",
+        "description": "Tareas comunes y accesos directos",
+        "inviteTeam": "Invitar miembro del equipo",
+        "createTenant": "Crear nueva organización",
+        "viewAnalytics": "Ver analíticas"
+      },
+      "fromLastMonth": "desde el mes pasado"
+    },
+    "tenants": {
+      "title": "Organizaciones",
+      "description": "Gestiona las organizaciones",
+      "create": "Crear organización",
+      "empty": "No se encontraron organizaciones",
+      "createFirst": "Crea tu primera organización",
+      "createdAt": "Creado el {{date}}"
+    },
+    "users": {
+      "title": "Usuarios",
+      "description": "Gestiona usuarios y permisos",
+      "invite": "Invitar usuario",
+      "all": "Todos los usuarios",
+      "allDescription": "Lista de todos los usuarios en tu organización",
+      "total": "{{count}} en total",
+      "empty": "No se encontraron usuarios",
+      "inviteFirst": "Invita a tu primer usuario",
+      "errorLoading": "Error al cargar usuarios"
+    },
+    "settings": {
+      "title": "Configuración",
+      "description": "Gestiona la configuración de tu cuenta",
+      "profile": {
+        "title": "Perfil",
+        "description": "Actualiza tu información personal",
+        "name": "Nombre",
+        "email": "Correo electrónico",
+        "emailHint": "El correo no se puede cambiar. Contacta a soporte si es necesario.",
+        "save": "Guardar cambios"
+      },
+      "security": {
+        "title": "Seguridad",
+        "description": "Gestiona tu contraseña y configuración de seguridad",
+        "currentPassword": "Contraseña actual",
+        "newPassword": "Nueva contraseña",
+        "confirmPassword": "Confirmar nueva contraseña",
+        "update": "Actualizar contraseña"
+      },
+      "danger": {
+        "title": "Zona de peligro",
+        "description": "Acciones irreversibles y destructivas",
+        "deleteAccount": "Eliminar cuenta",
+        "deleteAccountDescription": "Eliminar permanentemente tu cuenta y todos los datos asociados."
+      }
+    }
+  }
+}
+
