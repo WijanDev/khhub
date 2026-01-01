@@ -1,17 +1,18 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
-import { createAuth } from '../lib/auth';
+import { getAuth } from '../lib/auth';
 import { createDb } from '../db';
 import { users, verifications } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
-const authRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
-
-/**
- * Custom forgot password endpoint
- * Since Better Auth may not expose this by default
- */
-authRoutes.post('/forget-password', async (c) => {
+// Chain routes for proper type inference (Hono RPC)
+// Define specific routes before catch-all to ensure proper typing
+const authRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
+  /**
+   * Custom forgot password endpoint
+   * Since Better Auth may not expose this by default
+   */
+  .post('/forget-password', async (c) => {
   try {
     const { email, redirectTo } = await c.req.json<{ email: string; redirectTo?: string }>();
 
@@ -75,12 +76,11 @@ authRoutes.post('/forget-password', async (c) => {
     console.error('Forgot password error:', error);
     return c.json({ error: 'Failed to process request' }, 500);
   }
-});
-
-/**
- * Custom reset password endpoint
- */
-authRoutes.post('/reset-password', async (c) => {
+})
+  /**
+   * Custom reset password endpoint
+   */
+  .post('/reset-password', async (c) => {
   try {
     const { token, newPassword } = await c.req.json<{ token: string; newPassword: string }>();
 
@@ -120,22 +120,19 @@ authRoutes.post('/reset-password', async (c) => {
       return c.json({ error: 'User not found' }, 400);
     }
 
-    // Hash the new password using the auth instance
-    const auth = createAuth(c.env.DB, {
-      baseURL: getBaseURL(c.req.url),
-      secret: c.env.AUTH_SECRET || 'development-secret-change-in-production',
-      resendApiKey: c.env.RESEND_API_KEY,
+    // Use Better Auth's resetPassword API method
+    const auth = getAuth(c);
+
+    // Call Better Auth's resetPassword method
+    // Better Auth expects token as query param and newPassword in body
+    const result = await auth.api.resetPassword({
+      query: { token },
+      body: { newPassword },
     });
 
-    // Use Better Auth's password hashing
-    const hashedPassword = await auth.api.hashPassword({ password: newPassword });
-
-    // Update user's password in the account table
-    const { accounts } = await import('../db/schema');
-    await db
-      .update(accounts)
-      .set({ password: hashedPassword, updatedAt: new Date() })
-      .where(eq(accounts.userId, user.id));
+    if (!result || (result as any).error) {
+      return c.json({ error: (result as any).error || 'Failed to reset password' }, 400);
+    }
 
     // Delete the used verification token
     await db.delete(verifications).where(eq(verifications.id, verification.id));
@@ -145,19 +142,34 @@ authRoutes.post('/reset-password', async (c) => {
     console.error('Reset password error:', error);
     return c.json({ error: 'Failed to reset password' }, 500);
   }
-});
+})
+  /**
+   * Better Auth handler for all other auth routes
+   * This catch-all must be last to allow specific routes above to be typed correctly
+   */
+  .all('/*', async (c) => {
+  const auth = getAuth(c);
 
-/**
- * Better Auth handler for all other auth routes
- */
-authRoutes.all('/*', async (c) => {
-  const auth = createAuth(c.env.DB, {
-    baseURL: getBaseURL(c.req.url),
-    secret: c.env.AUTH_SECRET || 'development-secret-change-in-production',
-    resendApiKey: c.env.RESEND_API_KEY,
+  // Better Auth expects /api/auth/* but we're mounted at /auth/*
+  // Rewrite the request URL to match Better Auth's expectations
+  const url = new URL(c.req.url);
+  const originalPath = url.pathname;
+  
+  // If the path starts with /auth, rewrite it to /api/auth for Better Auth
+  if (originalPath.startsWith('/auth/')) {
+    url.pathname = originalPath.replace(/^\/auth/, '/api/auth');
+  } else if (originalPath === '/auth') {
+    url.pathname = '/api/auth';
+  }
+
+  // Create a new request with the rewritten URL
+  const rewrittenRequest = new Request(url.toString(), {
+    method: c.req.method,
+    headers: c.req.raw.headers,
+    body: c.req.raw.body,
   });
 
-  return auth.handler(c.req.raw);
+  return auth.handler(rewrittenRequest);
 });
 
 /**

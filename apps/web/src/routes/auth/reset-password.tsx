@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
+import { authApi } from '@/lib/api-client';
 
 // Schema for password field
 const PasswordSchema = z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength');
@@ -55,20 +56,16 @@ function ResetPasswordPage() {
       }
 
       try {
-        const response = await fetch('/api/auth/reset-password', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        // Use RPC client for auth routes
+        const response = await authApi['reset-password'].$post({
+          json: {
             token,
             newPassword: value.newPassword,
-          }),
+          },
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
+          const data = (await response.json()) as { error?: string };
           setServerError(data.error || t('auth.errors.genericError'));
           return;
         }

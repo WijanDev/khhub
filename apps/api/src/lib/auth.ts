@@ -2,6 +2,8 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import type { D1Database } from '@cloudflare/workers-types';
+import type { Context } from 'hono';
+import type { Env, Variables } from '../types';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 
@@ -29,6 +31,7 @@ export function createAuth(d1: D1Database, options: AuthOptions) {
       },
     }),
     baseURL: options.baseURL,
+    basePath: '/auth', // Use /auth instead of default /api/auth
     secret: options.secret,
     emailAndPassword: {
       enabled: true,
@@ -146,3 +149,23 @@ function getPasswordResetEmailHtml(name: string, resetUrl: string): string {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
+
+/**
+ * Get Better Auth instance from Hono context
+ * Centralizes auth creation logic for reuse across routes and middleware
+ */
+export function getAuth(c: { env: Env; req: { url: string } }): Auth {
+  return createAuth(c.env.DB, {
+    baseURL: getBaseURL(c.req.url),
+    secret: c.env.AUTH_SECRET || 'development-secret-change-in-production',
+    resendApiKey: c.env.RESEND_API_KEY,
+  });
+}
+
+/**
+ * Get base URL from request URL
+ */
+function getBaseURL(url: string): string {
+  const urlObj = new URL(url);
+  return `${urlObj.protocol}//${urlObj.host}`;
+}

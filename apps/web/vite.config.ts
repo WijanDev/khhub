@@ -19,11 +19,6 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8787',
-        changeOrigin: true,
-      },
-    },
+    // No proxy needed - using subdomain (api.khhub.app) instead of /api prefix
   },
 });
