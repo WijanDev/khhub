@@ -1,0 +1,28 @@
+# Cloudflare Workers local development environment variables
+# Copy this file to .dev.vars and fill in your actual values
+# .dev.vars is gitignored and will not be committed
+
+# Environment
+ENVIRONMENT=development
+
+# Auth
+# Generate a secure random 32-character string for production
+AUTH_SECRET=change-this-in-production-use-random-32-chars
+
+# Email Provider Configuration
+# Options: 'unosend', 'mailgun', or 'resend'
+EMAIL_PROVIDER=resend
+
+# Email API Keys (only set the one for your EMAIL_PROVIDER)
+# Unosend API Key (if using unosend)
+UNOSEND_API_KEY=your-unosend-api-key
+
+# Mailgun API Key and Domain (if using mailgun)
+MAILGUN_API_KEY=your-mailgun-api-key
+MAILGUN_DOMAIN=your-mailgun-domain
+
+# Resend API Key (if using resend)
+RESEND_API_KEY=your-resend-api-key
+
+# Web App URL
+WEB_APP_URL=http://localhost:5173

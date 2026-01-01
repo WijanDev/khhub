@@ -6,13 +6,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "ENVIRONMENT": "production",
-    "AUTH_SECRET": "change-this-in-production-use-random-32-chars",
     "EMAIL_PROVIDER": "resend",
-    "UNOSEND_API_KEY": "un__RdFpQePN8lhpUQC9osOANVWO5QkJySE",
-    "MAILGUN_API_KEY": "your-mailgun-api-key",
-    "MAILGUN_DOMAIN": "your-mailgun-domain",
-    "WEB_APP_URL": "http://localhost:5173",
-    "RESEND_API_KEY": "re_fXSjZ9Ge_9urQp5nAjpnDu4xdHmyY4G9a"
+    "WEB_APP_URL": "http://localhost:5173"
   },
   "d1_databases": [
     {
