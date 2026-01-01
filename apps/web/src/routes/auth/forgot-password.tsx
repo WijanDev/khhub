@@ -9,11 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
-import { authApi } from '@/lib/api-client';
+import { requestPasswordReset } from '@/lib/auth-client';
 
 // Simple schema for forgot password (just email)
 const ForgotPasswordFormSchema = z.object({
-  email: z.string().email('validation.email.invalid'),
+  email: z.email('validation.email.invalid'),
 });
 
 export const Route = createFileRoute('/auth/forgot-password')({
@@ -37,17 +37,13 @@ function ForgotPasswordPage() {
       setServerError('');
 
       try {
-        // Use RPC client for auth routes
-        const response = await authApi['forget-password'].$post({
-          json: {
-            email: value.email,
-            redirectTo: '/auth/reset-password',
-          },
+        // Use Better Auth client
+        const response = await requestPasswordReset({
+          email: value.email,
         });
 
-        if (!response.ok) {
-          const data = (await response.json()) as { error?: string };
-          setServerError(data.error || t('auth.errors.genericError'));
+        if (response.error) {
+          setServerError(response.error.message || t('auth.errors.genericError'));
           return;
         }
 
