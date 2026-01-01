@@ -3,6 +3,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { api } from '@/lib/api-client';
 
 interface User {
   id: number;
@@ -11,12 +12,16 @@ interface User {
 }
 
 const fetchUsers = createServerFn().handler(async () => {
-  const res = await fetch('http://localhost:3000/api/users');
-  if (!res.ok) {
+  try {
+    const response = await api.users.$get();
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+    const data = await response.json() as { users: User[] };
+    return data.users;
+  } catch {
     throw new Error('Failed to fetch users');
   }
-  const data = (await res.json()) as { users: User[] };
-  return data.users;
 });
 
 export const Route = createFileRoute('/users')({

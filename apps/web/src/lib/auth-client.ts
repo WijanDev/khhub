@@ -1,8 +1,12 @@
 import { createAuthClient } from 'better-auth/react';
 import { adminClient } from 'better-auth/client/plugins';
+import { getApiBaseUrl } from './api-client';
 
+// Better Auth by default appends /api/auth to baseURL
+// We're using /auth, so configure basePath
 export const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8787',
+  baseURL: getApiBaseUrl(),
+  basePath: '/auth',
   plugins: [adminClient()],
 });
 

@@ -5,13 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Database, Zap, HardDrive } from 'lucide-react';
+import { api } from '@/lib/api-client';
 
 const fetchHello = createServerFn().handler(async () => {
-  const res = await fetch('http://localhost:8787/api/hello');
-  if (!res.ok) {
+  try {
+    const response = await api.hello.$get();
+    if (!response.ok) {
+      return { message: 'Failed to connect to API' };
+    }
+    return response.json() as Promise<{ message: string }>;
+  } catch {
     return { message: 'Failed to connect to API' };
   }
-  return res.json() as Promise<{ message: string }>;
 });
 
 export const Route = createFileRoute('/')({

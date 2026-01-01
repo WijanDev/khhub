@@ -1,16 +1,13 @@
 import { createMiddleware } from 'hono/factory';
 import type { Env, Variables } from '../types';
-import { createAuth } from '../lib/auth';
+import { getAuth } from '../lib/auth';
 
 /**
  * Auth middleware - validates session and adds user to context
  */
 export const authMiddleware = createMiddleware<{ Bindings: Env; Variables: Variables }>(
   async (c, next) => {
-    const auth = createAuth(c.env.DB, {
-      baseURL: getBaseURL(c.req.url),
-      secret: c.env.AUTH_SECRET || 'development-secret-change-in-production',
-    });
+    const auth = getAuth(c);
 
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
@@ -30,10 +27,7 @@ export const authMiddleware = createMiddleware<{ Bindings: Env; Variables: Varia
  */
 export const requireAuth = createMiddleware<{ Bindings: Env; Variables: Variables }>(
   async (c, next) => {
-    const auth = createAuth(c.env.DB, {
-      baseURL: getBaseURL(c.req.url),
-      secret: c.env.AUTH_SECRET || 'development-secret-change-in-production',
-    });
+    const auth = getAuth(c);
 
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
@@ -55,10 +49,7 @@ export const requireAuth = createMiddleware<{ Bindings: Env; Variables: Variable
  */
 export const requireAdmin = createMiddleware<{ Bindings: Env; Variables: Variables }>(
   async (c, next) => {
-    const auth = createAuth(c.env.DB, {
-      baseURL: getBaseURL(c.req.url),
-      secret: c.env.AUTH_SECRET || 'development-secret-change-in-production',
-    });
+    const auth = getAuth(c);
 
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
@@ -78,9 +69,4 @@ export const requireAdmin = createMiddleware<{ Bindings: Env; Variables: Variabl
     await next();
   }
 );
-
-function getBaseURL(url: string): string {
-  const urlObj = new URL(url);
-  return `${urlObj.protocol}//${urlObj.host}`;
-}
 
