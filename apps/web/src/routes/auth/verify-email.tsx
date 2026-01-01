@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { authApi } from '@/lib/api-client';
+import { verifyEmail } from '@/lib/auth-client';
 
 export const Route = createFileRoute('/auth/verify-email')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -24,7 +24,7 @@ function VerifyEmailPage() {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    const verifyEmail = async () => {
+    const verifyEmailHelper = async () => {
       if (!token) {
         setStatus('error');
         setErrorMessage(t('auth.verifyEmail.invalidLink.description'));
@@ -32,33 +32,34 @@ function VerifyEmailPage() {
       }
 
       try {
-        const response = await authApi['verify-email'].$post({
-          json: {
+        const response = await verifyEmail({
+          query: {
             token,
-            redirectTo,
           },
         });
 
-        if (!response.ok) {
-          const data = (await response.json()) as { error?: string };
+        if (response.error) {
           setStatus('error');
-          setErrorMessage(data.error || t('auth.errors.genericError'));
+          setErrorMessage(response.error.message || t('auth.errors.genericError'));
           return;
         }
 
-        setStatus('success');
-        
-        // Redirect after a short delay to show success message
-        setTimeout(() => {
+        if (response.data) {
+          setStatus('success');
           navigate({ to: redirectTo || '/auth/signin' });
-        }, 2000);
+        } else {
+          setStatus('error');
+          setErrorMessage(t('auth.verifyEmail.invalidLink.description'));
+        }
       } catch (error) {
+        console.error('Error verifying email:', error);
         setStatus('error');
         setErrorMessage(t('auth.errors.genericError'));
+      } finally {
+        setStatus('success');
       }
     };
-
-    verifyEmail();
+    verifyEmailHelper();
   }, [token, redirectTo, navigate, t]);
 
   if (status === 'loading') {

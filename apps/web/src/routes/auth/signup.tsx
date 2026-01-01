@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Mail, CheckCircle } from 'lucide-react';
-import { signUp } from '@/lib/auth-client';
+import { signUp, sendVerificationEmail } from '@/lib/auth-client';
 import { SignUpSchema } from '@khhub/shared';
 import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { authApi } from '@/lib/api-client';
@@ -77,22 +77,20 @@ function SignUpPage() {
     setServerError('');
 
     try {
-      const response = await authApi['resend-verification'].$post({
-        json: { email: userEmail },
+      const response = await sendVerificationEmail({
+        email: userEmail,
       });
 
-      if (!response.ok) {
-        const data = (await response.json()) as { error?: string };
-        setServerError(data.error || t('auth.emailVerification.resendError'));
+      if (response.error) {
+        setServerError(response.error.message || t('auth.emailVerification.resendError'));
         return;
       }
 
       setResendSuccess(true);
       setServerError('');
-    } catch {
+    } catch (error) {
+      console.error('Error sending verification email:', error);
       setServerError(t('auth.emailVerification.resendError'));
-    } finally {
-      setResendingVerification(false);
     }
   };
 

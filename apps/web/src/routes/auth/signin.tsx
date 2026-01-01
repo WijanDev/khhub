@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { signIn } from '@/lib/auth-client';
+import { signIn, sendVerificationEmail } from '@/lib/auth-client';
 import { SignInSchema } from '@khhub/shared';
 import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { authApi } from '@/lib/api-client';
@@ -89,18 +89,17 @@ function SignInPage() {
     setServerError('');
 
     try {
-      const response = await authApi['resend-verification'].$post({
-        json: { email: userEmail },
+      const response = await sendVerificationEmail({
+        email: userEmail,
+        callbackURL: '/auth/verify-email',
       });
 
-      if (!response.ok) {
-        const data = (await response.json()) as { error?: string };
-        setServerError(data.error || t('auth.emailVerification.resendError'));
+      if (response.error) {
+        setServerError(response.error.message || t('auth.emailVerification.resendError'));
         return;
       }
 
       setResendSuccess(true);
-      setServerError('');
     } catch {
       setServerError(t('auth.emailVerification.resendError'));
     } finally {
