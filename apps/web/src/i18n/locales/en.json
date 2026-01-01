@@ -121,7 +121,14 @@
       "submit": "Create account",
       "submitting": "Creating account...",
       "hasAccount": "Already have an account?",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "success": {
+        "title": "Account created!",
+        "description": "We've sent a verification email to {{email}}. Please check your inbox to verify your account.",
+        "verifyTitle": "Verify your email",
+        "verifyDescription": "Click the verification link in the email we sent to complete your registration.",
+        "signIn": "Go to sign in"
+      }
     },
     "forgotPassword": {
       "title": "Forgot password?",
@@ -161,7 +168,37 @@
       "emailExists": "This email is already registered",
       "passwordMismatch": "Passwords do not match",
       "passwordTooShort": "Password must be at least 8 characters",
-      "genericError": "An unexpected error occurred"
+      "genericError": "An unexpected error occurred",
+      "emailNotVerified": "Your email address has not been verified. Please check your inbox for a verification email.",
+      "emailVerificationRequired": "Email verification required"
+    },
+    "emailVerification": {
+      "title": "Verify your email",
+      "description": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
+      "resend": "Resend verification email",
+      "resending": "Sending...",
+      "resendSuccess": "Verification email sent! Please check your inbox.",
+      "resendError": "Failed to send verification email. Please try again."
+    },
+    "verifyEmail": {
+      "verifying": {
+        "title": "Verifying your email",
+        "description": "Please wait while we verify your email address..."
+      },
+      "success": {
+        "title": "Email verified!",
+        "description": "Your email address has been successfully verified. Redirecting...",
+        "continue": "Continue"
+      },
+      "error": {
+        "title": "Verification failed",
+        "description": "The verification link is invalid or has expired.",
+        "backToSignIn": "Back to sign in"
+      },
+      "invalidLink": {
+        "title": "Invalid link",
+        "description": "This verification link is invalid or has expired."
+      }
     }
   },
   "app": {
@@ -210,7 +247,16 @@
       "total": "{{count}} total",
       "empty": "No users found",
       "inviteFirst": "Invite your first user",
-      "errorLoading": "Error loading users"
+      "errorLoading": "Error loading users",
+      "emailVerified": "Email verified",
+      "emailNotVerified": "Email not verified",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "refresh": "Refresh users",
+      "purgeCache": "Purge users cache",
+      "purgeCacheConfirm": "Are you sure you want to purge the users cache? This will force a fresh fetch from the database.",
+      "purgeCacheSuccess": "Users cache purged successfully",
+      "purgeCacheError": "Failed to purge cache. Please try again."
     },
     "settings": {
       "title": "Settings",

@@ -1,11 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreHorizontal, RefreshCw, AlertCircle, Users } from 'lucide-react';
-import { useUsersSuspense, prefetchUsers, userKeys } from '@/lib/queries/users';
+import { Plus, MoreHorizontal, RefreshCw, AlertCircle, Users, Trash2, Trash } from 'lucide-react';
+import { useUsersSuspense, prefetchUsers, userKeys, useDeleteUser } from '@/lib/queries/users';
 import { getQueryClientFromContext } from '@/lib/router-utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { usersApi } from '@/lib/api-client';
 
 export const Route = createFileRoute('/app/users')({
   loader: async ({ context }) => {
@@ -21,9 +24,50 @@ export const Route = createFileRoute('/app/users')({
 function UsersPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const deleteUserMutation = useDeleteUser();
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [purgingCache, setPurgingCache] = useState(false);
   // Get data with suspense (uses prefetched data from loader)
   const { data } = useUsersSuspense();
   const users = data.users;
+
+  const handleDelete = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This will send them an email notification.`)) {
+      return;
+    }
+
+    setDeletingUserId(userId);
+    try {
+      await deleteUserMutation.mutateAsync(userId);
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert('Failed to delete user. Please try again.');
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
+  const handlePurgeCache = async () => {
+    if (!confirm(t('app.users.purgeCacheConfirm'))) {
+      return;
+    }
+
+    setPurgingCache(true);
+    try {
+      const response = await usersApi['cache/purge'].$post();
+      if (!response.ok) {
+        throw new Error('Failed to purge cache');
+      }
+      // Invalidate and refetch users
+      await queryClient.invalidateQueries({ queryKey: userKeys.list() });
+      alert(t('app.users.purgeCacheSuccess'));
+    } catch (error) {
+      console.error('Failed to purge cache:', error);
+      alert(t('app.users.purgeCacheError'));
+    } finally {
+      setPurgingCache(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -38,8 +82,22 @@ function UsersPage() {
             variant="outline"
             size="icon"
             onClick={() => queryClient.invalidateQueries({ queryKey: userKeys.list() })}
+            title={t('app.users.refresh')}
           >
             <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePurgeCache}
+            disabled={purgingCache}
+            title={t('app.users.purgeCache')}
+          >
+            {purgingCache ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash className="h-4 w-4" />
+            )}
           </Button>
           <Button>
             <Plus className="mr-2 h-4 w-4" />
@@ -96,6 +154,12 @@ function UsersPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2" title={user.emailVerified ? t('app.users.emailVerified') : t('app.users.emailNotVerified')}>
+                      <Checkbox checked={user.emailVerified === true} disabled={true} />
+                      <span className="text-xs text-muted-foreground">
+                        {user.emailVerified ? t('app.users.verified') : t('app.users.notVerified')}
+                      </span>
+                    </div>
                     <span className="rounded-full bg-accent px-2 py-1 text-xs font-medium">
                       {user.role || 'user'}
                     </span>
@@ -108,8 +172,18 @@ function UsersPage() {
                     >
                       {user.banned === true ? 'banned' : 'active'}
                     </span>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(user.id, user.name)}
+                      disabled={deletingUserId === user.id}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                    >
+                      {deletingUserId === user.id ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>

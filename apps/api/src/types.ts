@@ -5,7 +5,13 @@ export interface Env {
   STORAGE: R2Bucket;
   ENVIRONMENT?: string;
   AUTH_SECRET?: string;
+  // Email provider configuration
+  EMAIL_PROVIDER?: 'unosend' | 'mailgun' | 'resend';
+  UNOSEND_API_KEY?: string;
+  MAILGUN_API_KEY?: string;
+  MAILGUN_DOMAIN?: string;
   RESEND_API_KEY?: string;
+  WEB_APP_URL?: string;
 }
 
 // Session type from Better Auth

@@ -56,6 +56,12 @@ function ResetPasswordPage() {
       }
 
       try {
+        console.log('========================================');
+        console.log('RESET PASSWORD');
+        console.log('========================================');
+        console.log(`Token: ${token}`);
+        console.log(`New Password: ${value.newPassword}`);
+        console.log('========================================');
         // Use RPC client for auth routes
         const response = await authApi['reset-password'].$post({
           json: {

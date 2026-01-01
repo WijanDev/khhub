@@ -94,6 +94,28 @@ export class CacheManager {
   async invalidateUser(userId: string): Promise<number> {
     return this.deleteByPrefix(`user:${userId}`);
   }
+
+  /**
+   * Purge all cache entries
+   */
+  async purgeAll(): Promise<number> {
+    const list = await this.kv.list({ prefix: `${this.prefix}:` });
+    
+    await Promise.all(list.keys.map((k) => this.kv.delete(k.name)));
+    return list.keys.length;
+  }
+
+  /**
+   * Purge cache by type (users, tenants, etc.)
+   */
+  async purgeByType(type: 'users' | 'tenants' | 'sessions'): Promise<number> {
+    const prefixMap = {
+      users: 'users:',
+      tenants: 'tenants:',
+      sessions: 'session:',
+    };
+    return this.deleteByPrefix(prefixMap[type]);
+  }
 }
 
 /**

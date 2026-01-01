@@ -121,7 +121,14 @@
       "submit": "Crear compte",
       "submitting": "Creant compte...",
       "hasAccount": "Ja tens compte?",
-      "signIn": "Iniciar sessió"
+      "signIn": "Iniciar sessió",
+      "success": {
+        "title": "Compte creat!",
+        "description": "Hem enviat un correu de verificació a {{email}}. Si us plau, revisa la teva safata d'entrada per verificar el teu compte.",
+        "verifyTitle": "Verifica el teu correu electrònic",
+        "verifyDescription": "Fes clic a l'enllaç de verificació al correu que hem enviat per completar el teu registre.",
+        "signIn": "Anar a iniciar sessió"
+      }
     },
     "forgotPassword": {
       "title": "Has oblidat la contrasenya?",
@@ -161,7 +168,37 @@
       "emailExists": "Aquest correu ja està registrat",
       "passwordMismatch": "Les contrasenyes no coincideixen",
       "passwordTooShort": "La contrasenya ha de tenir almenys 8 caràcters",
-      "genericError": "S'ha produït un error inesperat"
+      "genericError": "S'ha produït un error inesperat",
+      "emailNotVerified": "La teva adreça de correu electrònic no ha estat verificada. Si us plau, revisa la teva safata d'entrada per trobar el correu de verificació.",
+      "emailVerificationRequired": "Verificació de correu electrònic requerida"
+    },
+    "emailVerification": {
+      "title": "Verifica el teu correu electrònic",
+      "description": "Hem enviat un correu de verificació a la teva safata d'entrada. Si us plau, fes clic a l'enllaç del correu per verificar el teu compte.",
+      "resend": "Reenviar correu de verificació",
+      "resending": "Enviant...",
+      "resendSuccess": "Correu de verificació enviat! Si us plau, revisa la teva safata d'entrada.",
+      "resendError": "Error en enviar el correu de verificació. Si us plau, torna-ho a intentar."
+    },
+    "verifyEmail": {
+      "verifying": {
+        "title": "Verificant el teu correu",
+        "description": "Si us plau espera mentre verifiquem la teva adreça de correu electrònic..."
+      },
+      "success": {
+        "title": "Correu verificat!",
+        "description": "La teva adreça de correu electrònic ha estat verificada correctament. Redirigint...",
+        "continue": "Continuar"
+      },
+      "error": {
+        "title": "Verificació fallida",
+        "description": "L'enllaç de verificació és invàlid o ha expirat.",
+        "backToSignIn": "Tornar a iniciar sessió"
+      },
+      "invalidLink": {
+        "title": "Enllaç invàlid",
+        "description": "Aquest enllaç de verificació és invàlid o ha expirat."
+      }
     }
   },
   "app": {
@@ -210,7 +247,16 @@
       "total": "{{count}} en total",
       "empty": "No s'han trobat usuaris",
       "inviteFirst": "Convida al teu primer usuari",
-      "errorLoading": "Error en carregar usuaris"
+      "errorLoading": "Error en carregar usuaris",
+      "emailVerified": "Correu verificat",
+      "emailNotVerified": "Correu no verificat",
+      "verified": "Verificat",
+      "notVerified": "No verificat",
+      "refresh": "Actualitzar usuaris",
+      "purgeCache": "Purgar memòria cau d'usuaris",
+      "purgeCacheConfirm": "Estàs segur que vols purgar la memòria cau d'usuaris? Això forçarà una nova consulta des de la base de dades.",
+      "purgeCacheSuccess": "Memòria cau d'usuaris purgada correctament",
+      "purgeCacheError": "Error en purgar la memòria cau. Si us plau, torna-ho a intentar."
     },
     "settings": {
       "title": "Configuració",

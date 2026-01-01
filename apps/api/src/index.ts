@@ -6,6 +6,7 @@ import authRoutes from './routes/auth';
 import tenantsRoutes from './routes/tenants';
 import usersRoutes from './routes/users';
 import storageRoutes from './routes/storage';
+import { createCacheManager } from './lib/cache';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -42,6 +43,41 @@ const apiRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
   // Hello endpoint for testing
   .get('/hello', (c) => {
     return c.json({ message: 'Hello from Hono API!' });
+  })
+  // Cache management endpoints
+  .post('/cache/purge', async (c) => {
+    try {
+      const cache = createCacheManager(c.env.CACHE);
+      const deletedCount = await cache.purgeAll();
+      
+      return c.json({ 
+        message: 'All cache purged successfully',
+        deletedCount 
+      });
+    } catch (error) {
+      console.error('Error purging cache:', error);
+      return c.json({ error: 'Failed to purge cache' }, 500);
+    }
+  })
+  .post('/cache/purge/:type', async (c) => {
+    try {
+      const type = c.req.param('type') as 'users' | 'tenants' | 'sessions';
+      
+      if (!['users', 'tenants', 'sessions'].includes(type)) {
+        return c.json({ error: 'Invalid cache type. Must be: users, tenants, or sessions' }, 400);
+      }
+
+      const cache = createCacheManager(c.env.CACHE);
+      const deletedCount = await cache.purgeByType(type);
+      
+      return c.json({ 
+        message: `${type} cache purged successfully`,
+        deletedCount 
+      });
+    } catch (error) {
+      console.error(`Error purging ${c.req.param('type')} cache:`, error);
+      return c.json({ error: 'Failed to purge cache' }, 500);
+    }
   })
   // Auth routes (handled by Better Auth)
   .route('/auth', authRoutes)

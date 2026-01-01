@@ -121,7 +121,14 @@
       "submit": "Crear cuenta",
       "submitting": "Creando cuenta...",
       "hasAccount": "¿Ya tienes cuenta?",
-      "signIn": "Iniciar sesión"
+      "signIn": "Iniciar sesión",
+      "success": {
+        "title": "¡Cuenta creada!",
+        "description": "Hemos enviado un correo de verificación a {{email}}. Por favor, revisa tu bandeja de entrada para verificar tu cuenta.",
+        "verifyTitle": "Verifica tu correo electrónico",
+        "verifyDescription": "Haz clic en el enlace de verificación en el correo que enviamos para completar tu registro.",
+        "signIn": "Ir a iniciar sesión"
+      }
     },
     "forgotPassword": {
       "title": "¿Olvidaste tu contraseña?",
@@ -161,7 +168,37 @@
       "emailExists": "Este correo ya está registrado",
       "passwordMismatch": "Las contraseñas no coinciden",
       "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
-      "genericError": "Ocurrió un error inesperado"
+      "genericError": "Ocurrió un error inesperado",
+      "emailNotVerified": "Tu dirección de correo electrónico no ha sido verificada. Por favor, revisa tu bandeja de entrada para encontrar el correo de verificación.",
+      "emailVerificationRequired": "Verificación de correo electrónico requerida"
+    },
+    "emailVerification": {
+      "title": "Verifica tu correo electrónico",
+      "description": "Hemos enviado un correo de verificación a tu bandeja de entrada. Por favor, haz clic en el enlace del correo para verificar tu cuenta.",
+      "resend": "Reenviar correo de verificación",
+      "resending": "Enviando...",
+      "resendSuccess": "¡Correo de verificación enviado! Por favor, revisa tu bandeja de entrada.",
+      "resendError": "Error al enviar el correo de verificación. Por favor, inténtalo de nuevo."
+    },
+    "verifyEmail": {
+      "verifying": {
+        "title": "Verificando tu correo",
+        "description": "Por favor espera mientras verificamos tu dirección de correo electrónico..."
+      },
+      "success": {
+        "title": "¡Correo verificado!",
+        "description": "Tu dirección de correo electrónico ha sido verificada exitosamente. Redirigiendo...",
+        "continue": "Continuar"
+      },
+      "error": {
+        "title": "Verificación fallida",
+        "description": "El enlace de verificación es inválido o ha expirado.",
+        "backToSignIn": "Volver a iniciar sesión"
+      },
+      "invalidLink": {
+        "title": "Enlace inválido",
+        "description": "Este enlace de verificación es inválido o ha expirado."
+      }
     }
   },
   "app": {
@@ -210,7 +247,16 @@
       "total": "{{count}} en total",
       "empty": "No se encontraron usuarios",
       "inviteFirst": "Invita a tu primer usuario",
-      "errorLoading": "Error al cargar usuarios"
+      "errorLoading": "Error al cargar usuarios",
+      "emailVerified": "Correo verificado",
+      "emailNotVerified": "Correo no verificado",
+      "verified": "Verificado",
+      "notVerified": "No verificado",
+      "refresh": "Actualizar usuarios",
+      "purgeCache": "Purgar caché de usuarios",
+      "purgeCacheConfirm": "¿Estás seguro de que quieres purgar la caché de usuarios? Esto forzará una nueva consulta desde la base de datos.",
+      "purgeCacheSuccess": "Caché de usuarios purgada exitosamente",
+      "purgeCacheError": "Error al purgar la caché. Por favor, inténtalo de nuevo."
     },
     "settings": {
       "title": "Configuración",

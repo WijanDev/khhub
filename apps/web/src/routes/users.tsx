@@ -17,7 +17,7 @@ const fetchUsers = createServerFn().handler(async () => {
     if (!response.ok) {
       throw new Error('Failed to fetch users');
     }
-    const data = await response.json() as { users: User[] };
+    const data = await response.json() as unknown as { users: User[] };
     return data.users;
   } catch {
     throw new Error('Failed to fetch users');

@@ -6,6 +6,8 @@ import { createCacheManager, CacheKeys, CacheTTL } from '../lib/cache';
 import { validateJson, validateParam, IdParamSchema, IdTenantParamSchema } from '../middleware/validation';
 import { AddUserToTenantSchema, UpdateUserRoleSchema } from '@khhub/shared';
 import { z } from 'zod';
+import { EmailTemplates } from '../lib/email';
+import { createEmailServiceFromEnv } from '../lib/email/service';
 
 // User update schema (specific to this API)
 const UpdateUserApiSchema = z.object({
@@ -116,7 +118,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       return c.json({ error: 'Failed to update user' }, 500);
     }
   })
-  // Delete user (invalidates cache)
+  // Delete user (invalidates cache and sends email)
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
     try {
@@ -134,6 +136,19 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
       await Promise.all([cache.invalidateUser(id), cache.delete(CacheKeys.allUsers())]);
+
+      // Send email notification if email service is configured
+      try {
+        const emailService = createEmailServiceFromEnv(c.env);
+        await emailService.sendEmail({
+          to: user.email,
+          subject: 'Your KH Hub account has been deleted',
+          html: EmailTemplates.accountDeleted(user.name),
+        });
+      } catch (emailError) {
+        // Log email error but don't fail the deletion
+        console.error('Failed to send deletion email:', emailError);
+      }
 
       return c.json({ message: 'User deleted', user });
     } catch (error) {
@@ -230,6 +245,21 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     } catch (error) {
       console.error('Error removing user from tenant:', error);
       return c.json({ error: 'Failed to remove user from tenant' }, 500);
+    }
+  })
+  // Purge users cache
+  .post('/cache/purge', async (c) => {
+    try {
+      const cache = createCacheManager(c.env.CACHE);
+      const deletedCount = await cache.purgeByType('users');
+      
+      return c.json({ 
+        message: 'Users cache purged successfully',
+        deletedCount 
+      });
+    } catch (error) {
+      console.error('Error purging users cache:', error);
+      return c.json({ error: 'Failed to purge users cache' }, 500);
     }
   });
 
