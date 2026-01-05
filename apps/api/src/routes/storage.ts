@@ -71,35 +71,18 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     console.error('Error listing files:', error);
     return c.json({ error: 'Failed to list files' }, 500);
   }
-})
-  // Download file
-  .get('/files/*', async (c) => {
-  const path = c.req.path.replace('/api/storage/files/', '');
-
-  try {
-    const storageManager = createStorageManager(c.env.STORAGE);
-    const file = await storageManager.download(path);
-
-    if (!file) {
-      return c.json({ error: 'File not found' }, 404);
-    }
-
-    return new Response(file.data, {
-      headers: {
-        'Content-Type': file.info.contentType || 'application/octet-stream',
-        'Content-Length': file.info.size.toString(),
-        'ETag': file.info.etag,
-        'Cache-Control': 'public, max-age=31536000',
-      },
-    });
-  } catch (error) {
-    console.error('Error downloading file:', error);
-    return c.json({ error: 'Failed to download file' }, 500);
-  }
-})
-  // Get file info (metadata only)
+  })
+  // Get file info (metadata only) - must come before /files/* to match correctly
   .get('/files/info/*', async (c) => {
-  const path = c.req.path.replace('/api/storage/files/info/', '');
+  // Handle both mounted (/storage/files/info/*) and direct (/api/storage/files/info/*) paths
+  let path = c.req.path;
+  if (path.startsWith('/api/storage/files/info/')) {
+    path = path.replace('/api/storage/files/info/', '');
+  } else if (path.startsWith('/storage/files/info/')) {
+    path = path.replace('/storage/files/info/', '');
+  } else if (path.startsWith('/files/info/')) {
+    path = path.replace('/files/info/', '');
+  }
 
   try {
     const storageManager = createStorageManager(c.env.STORAGE);
@@ -124,9 +107,50 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     return c.json({ error: 'Failed to get file info' }, 500);
   }
 })
+  // Download file - must come after /files/info/* to match correctly
+  .get('/files/*', async (c) => {
+  // Handle both mounted (/storage/files/*) and direct (/api/storage/files/*) paths
+  let path = c.req.path;
+  if (path.startsWith('/api/storage/files/')) {
+    path = path.replace('/api/storage/files/', '');
+  } else if (path.startsWith('/storage/files/')) {
+    path = path.replace('/storage/files/', '');
+  } else if (path.startsWith('/files/')) {
+    path = path.replace('/files/', '');
+  }
+
+  try {
+    const storageManager = createStorageManager(c.env.STORAGE);
+    const file = await storageManager.download(path);
+
+    if (!file) {
+      return c.json({ error: 'File not found' }, 404);
+    }
+
+    return new Response(file.data, {
+      headers: {
+        'Content-Type': file.info.contentType || 'application/octet-stream',
+        'Content-Length': file.info.size.toString(),
+        'ETag': file.info.etag,
+        'Cache-Control': 'public, max-age=31536000',
+      },
+    });
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    return c.json({ error: 'Failed to download file' }, 500);
+  }
+})
   // Delete file
   .delete('/files/*', async (c) => {
-  const path = c.req.path.replace('/api/storage/files/', '');
+  // Handle both mounted (/storage/files/*) and direct (/api/storage/files/*) paths
+  let path = c.req.path;
+  if (path.startsWith('/api/storage/files/')) {
+    path = path.replace('/api/storage/files/', '');
+  } else if (path.startsWith('/storage/files/')) {
+    path = path.replace('/storage/files/', '');
+  } else if (path.startsWith('/files/')) {
+    path = path.replace('/files/', '');
+  }
 
   try {
     const storageManager = createStorageManager(c.env.STORAGE);

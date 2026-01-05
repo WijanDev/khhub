@@ -13,7 +13,6 @@
   },
   "scripts": {
     "dev": "wrangler dev",
-    "dev:node": "tsx watch src/node.ts",
     "build": "echo 'No build needed for Workers'",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
@@ -22,28 +21,33 @@
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.7",
     "@hono/zod-validator": "^0.7.6",
     "@khhub/shared": "*",
-    "better-auth": "^1.4.9",
+    "better-auth": "^1.4.10",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.3",
     "mailgun.js": "^12.4.1",
     "resend": "^6.6.0",
-    "zod": "^4.3.2"
+    "zod": "^4.3.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20251231.0",
+    "@cloudflare/workers-types": "^4.20260101.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.0.3",
+    "@vitest/ui": "^4.0.16",
     "better-sqlite3": "^12.5.0",
     "drizzle-kit": "^0.31.8",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "vitest": "^4.0.16",
     "wrangler": "^4.54.0"
   }
 }

@@ -6,8 +6,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["vitest/globals"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/test/vitest-setup.d.ts"],
   "exclude": ["node_modules", "dist", ".output"]
 }
