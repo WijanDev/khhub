@@ -103,5 +103,11 @@ app.onError((err, c) => {
 // Export the API type for RPC client
 export type ApiType = typeof apiRoutes;
 
+// Export apiRoutes for type inference and testing
+export { apiRoutes };
+
+// Export app as both named and default export
+export { app };
+
 // Export for Cloudflare Workers
 export default app;

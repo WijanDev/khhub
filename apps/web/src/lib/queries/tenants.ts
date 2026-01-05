@@ -17,7 +17,7 @@ export interface TenantConnection {
   name: string;
   dbType: 'postgresql' | 'mysql' | 'sqlite' | 'd1';
   connectionString: string;
-  isPrimary: boolean;
+  isPrimary: boolean | null;
   status: 'active' | 'inactive' | 'error' | null;
   createdAt: string | null;
   updatedAt: string | null;
@@ -60,7 +60,7 @@ async function fetchTenant(id: string): Promise<TenantResponse> {
   if (!response.ok) {
     throw new Error('Failed to fetch tenant');
   }
-  return response.json();
+  return response.json() as Promise<TenantResponse>;
 }
 
 // Fetch tenant connections
@@ -69,7 +69,7 @@ async function fetchTenantConnections(id: string): Promise<TenantConnectionsResp
   if (!response.ok) {
     throw new Error('Failed to fetch tenant connections');
   }
-  return response.json();
+  return response.json() as Promise<TenantConnectionsResponse>;
 }
 
 // Hook to get all tenants

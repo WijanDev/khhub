@@ -1,4 +1,16 @@
-import type { TenantConnection, DbType } from '../types';
+import type { TenantConnection } from '../types';
+
+interface RawTenantConnection {
+  id: string;
+  tenant_id: string;
+  name: string;
+  db_type: string;
+  connection_string: string;
+  is_primary: number;
+  status: 'active' | 'inactive' | 'error';
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Tenant Database Manager
@@ -7,7 +19,7 @@ import type { TenantConnection, DbType } from '../types';
 export class TenantDbManager {
   private connections: Map<string, TenantConnection[]> = new Map();
 
-  constructor(private centralDb: D1Database) {}
+  constructor(private centralDb: D1Database) { }
 
   /**
    * Get all connections for a tenant
@@ -22,10 +34,22 @@ export class TenantDbManager {
     const { results } = await this.centralDb
       .prepare('SELECT * FROM tenant_connections WHERE tenant_id = ? AND status = ?')
       .bind(tenantId, 'active')
-      .all<TenantConnection>();
+      .all<RawTenantConnection>();
 
-    this.connections.set(tenantId, results);
-    return results;
+    const mappedResults: TenantConnection[] = results.map((row) => ({
+      id: row.id,
+      tenantId: row.tenant_id,
+      name: row.name,
+      dbType: (row.db_type as 'd1' | 'postgresql' | 'mysql' | 'sqlite'),
+      connectionString: row.connection_string,
+      isPrimary: row.is_primary === 1 ? true : null,
+      status: row.status as 'active' | 'inactive' | 'error' | null,
+      createdAt: row.created_at || null,
+      updatedAt: row.updated_at || null,
+    }));
+
+    this.connections.set(tenantId, mappedResults);
+    return mappedResults;
   }
 
   /**
@@ -33,7 +57,7 @@ export class TenantDbManager {
    */
   async getPrimaryConnection(tenantId: string): Promise<TenantConnection | null> {
     const connections = await this.getConnections(tenantId);
-    return connections.find((c) => c.is_primary === 1) || connections[0] || null;
+    return connections.find((c) => c.isPrimary === true) || connections[0] || null;
   }
 
   /**
@@ -46,7 +70,7 @@ export class TenantDbManager {
 
   /**
    * Create a database client for a tenant connection
-   * Returns connection info - actual client creation depends on db_type
+   * Returns connection info for D1 database
    */
   async createClient(
     tenantId: string,
@@ -62,24 +86,7 @@ export class TenantDbManager {
 
     return {
       connection,
-      connectionString: connection.connection_string,
-    };
-  }
-
-  /**
-   * Parse connection string to get database details
-   */
-  parseConnectionString(connectionString: string, dbType: DbType): ConnectionDetails {
-    // Handle different connection string formats
-    const url = new URL(connectionString.replace(/^(postgresql|mysql):/, 'http:'));
-
-    return {
-      host: url.hostname,
-      port: parseInt(url.port) || getDefaultPort(dbType),
-      database: url.pathname.slice(1),
-      username: url.username,
-      password: url.password,
-      ssl: url.searchParams.get('ssl') === 'true',
+      connectionString: connection.connectionString,
     };
   }
 
@@ -92,26 +99,6 @@ export class TenantDbManager {
     } else {
       this.connections.clear();
     }
-  }
-}
-
-interface ConnectionDetails {
-  host: string;
-  port: number;
-  database: string;
-  username: string;
-  password: string;
-  ssl: boolean;
-}
-
-function getDefaultPort(dbType: DbType): number {
-  switch (dbType) {
-    case 'postgresql':
-      return 5432;
-    case 'mysql':
-      return 3306;
-    default:
-      return 0;
   }
 }
 
