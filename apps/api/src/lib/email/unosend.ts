@@ -2,7 +2,8 @@
  * Unosend email service implementation
  */
 
-import type { EmailService, SendEmailOptions, SendEmailResult } from './types';
+import type { SendEmailOptions, SendEmailResult } from './types';
+import { AbstractEmailService } from './base';
 
 interface UnosendErrorResponse {
   error?: {
@@ -21,11 +22,12 @@ interface UnosendSuccessResponse {
   created_at: string;
 }
 
-export class UnosendEmailService implements EmailService {
-  private apiKey: string;
-  private defaultFrom: string;
+export class UnosendEmailService extends AbstractEmailService {
+  private readonly apiKey: string;
+  private readonly defaultFrom: string;
 
   constructor(apiKey: string, defaultFrom: string = 'KH Hub <noreply@khhub.app>') {
+    super();
     this.apiKey = apiKey;
     this.defaultFrom = defaultFrom;
   }
@@ -44,15 +46,9 @@ export class UnosendEmailService implements EmailService {
       headers,
     } = options;
 
-    // Normalize recipients to arrays
-    const toArray = Array.isArray(to) ? to : [to];
-    const ccArray = cc ? (Array.isArray(cc) ? cc : [cc]) : undefined;
-    const bccArray = bcc ? (Array.isArray(bcc) ? bcc : [bcc]) : undefined;
-
-    // Build request body
     const body: Record<string, unknown> = {
       from,
-      to: toArray,
+      to: this.normalizeToRecipients(to),
       subject,
       html,
     };
@@ -65,10 +61,12 @@ export class UnosendEmailService implements EmailService {
       body.reply_to = replyTo;
     }
 
+    const ccArray = this.normalizeRecipients(cc);
     if (ccArray) {
       body.cc = ccArray;
     }
 
+    const bccArray = this.normalizeRecipients(bcc);
     if (bccArray) {
       body.bcc = bccArray;
     }
@@ -93,46 +91,10 @@ export class UnosendEmailService implements EmailService {
       });
 
       if (!response.ok) {
-        let errorMessage = 'Failed to send email';
-        let errorCode: string | undefined;
-
-        try {
-          const errorData = (await response.json()) as UnosendErrorResponse;
-          // Unosend error structure: { error: { code, message } }
-          if (errorData.error) {
-            errorMessage = errorData.error.message || errorMessage;
-            errorCode = errorData.error.code;
-          } else {
-            // Fallback for other error formats
-            errorMessage = errorData.message || errorMessage;
-          }
-        } catch {
-          // If response is not JSON, try to get text
-          try {
-            const errorText = await response.text();
-            errorMessage = errorText || errorMessage;
-          } catch {
-            return {
-              status: 'failed',
-              error: errorMessage,
-            };
-          }
-        }
-
-        console.error('Failed to send email with Unosend:', {
-          status: response.status,
-          statusText: response.statusText,
-          message: errorMessage,
-          code: errorCode,
-        });
-
-        return {
-          status: 'failed',
-          error: errorMessage,
-        };
+        return this.handleUnosendError(response);
       }
 
-      const data = (await response.json()) as UnosendSuccessResponse;
+      const data: UnosendSuccessResponse = await response.json();
       return {
         id: data.id,
         status: data.status || 'queued',
@@ -140,15 +102,50 @@ export class UnosendEmailService implements EmailService {
       };
     } catch (error) {
       console.error('Failed to send email with Unosend:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         status: 'failed',
-        error: errorMessage,
+        error: this.getErrorMessage(error),
       };
     }
   }
 
-  async sendSimpleEmail(to: string, subject: string, html: string, text?: string): Promise<SendEmailResult> {
-    return this.sendEmail({ to, subject, html, text });
+  private async handleUnosendError(response: Response): Promise<SendEmailResult> {
+    let errorMessage = 'Failed to send email';
+    let errorCode: string | undefined;
+
+    try {
+      const errorData: UnosendErrorResponse = await response.json();
+      // Unosend error structure: { error: { code, message } }
+      if (errorData.error) {
+        errorMessage = errorData.error.message || errorMessage;
+        errorCode = errorData.error.code;
+      } else {
+        // Fallback for other error formats
+        errorMessage = errorData.message || errorMessage;
+      }
+    } catch {
+      // If response is not JSON, try to get text
+      try {
+        const errorText = await response.text();
+        errorMessage = errorText || errorMessage;
+      } catch {
+        return {
+          status: 'failed',
+          error: errorMessage,
+        };
+      }
+    }
+
+    console.error('Failed to send email with Unosend:', {
+      status: response.status,
+      statusText: response.statusText,
+      message: errorMessage,
+      code: errorCode,
+    });
+
+    return {
+      status: 'failed',
+      error: errorMessage,
+    };
   }
 }

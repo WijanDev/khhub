@@ -4,12 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { requestPasswordReset } from '@/lib/auth-client';
+import { AuthCard } from '@/components/auth/auth-card';
+import { AuthError } from '@/components/auth/auth-error';
 
 // Simple schema for forgot password (just email)
 const ForgotPasswordFormSchema = z.object({
@@ -57,65 +58,76 @@ function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="space-y-1 text-center">
+      <AuthCard
+        title={t('auth.forgotPassword.success.title')}
+        description={
+          <>
+            {t('auth.forgotPassword.success.description')} <strong>{submittedEmail}</strong>
+          </>
+        }
+        footer={
+          <div className="flex flex-col space-y-4">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setSuccess(false);
+                form.reset();
+              }}
+            >
+              {t('auth.forgotPassword.success.tryAnother')}
+            </Button>
+            <Link
+              to="/auth/signin"
+              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('auth.forgotPassword.backToSignIn')}
+            </Link>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Mail className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">{t('auth.forgotPassword.success.title')}</CardTitle>
-          <CardDescription>
-            {t('auth.forgotPassword.success.description')} <strong>{submittedEmail}</strong>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 text-center">
           <p className="text-sm text-muted-foreground">
             {t('auth.forgotPassword.success.hint')}
           </p>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => {
-              setSuccess(false);
-              form.reset();
-            }}
-          >
-            {t('auth.forgotPassword.success.tryAnother')}
-          </Button>
-          <Link
-            to="/auth/signin"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('auth.forgotPassword.backToSignIn')}
-          </Link>
-        </CardFooter>
-      </Card>
+        </div>
+      </AuthCard>
     );
   }
 
   return (
-    <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">{t('auth.forgotPassword.title')}</CardTitle>
-        <CardDescription>
-          {t('auth.forgotPassword.description')}
-        </CardDescription>
-      </CardHeader>
-      <Form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
+    <Form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+      className="w-full max-w-md"
+    >
+      <AuthCard
+        title={t('auth.forgotPassword.title')}
+        description={t('auth.forgotPassword.description')}
+        footer={
+          <>
+            <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
+              {form.state.isSubmitting ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
+            </Button>
+            <Link
+              to="/auth/signin"
+              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('auth.forgotPassword.backToSignIn')}
+            </Link>
+          </>
+        }
       >
-        <CardContent className="space-y-4">
-          {serverError && (
-            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-              {serverError}
-            </div>
-          )}
+        <div className="space-y-4">
+          <AuthError error={serverError} />
 
           <form.Field
             name="email"
@@ -143,21 +155,8 @@ function ForgotPasswordPage() {
               </FormField>
             )}
           </form.Field>
-        </CardContent>
-
-        <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
-            {form.state.isSubmitting ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
-          </Button>
-          <Link
-            to="/auth/signin"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('auth.forgotPassword.backToSignIn')}
-          </Link>
-        </CardFooter>
-      </Form>
-    </Card>
+        </div>
+      </AuthCard>
+    </Form>
   );
 }

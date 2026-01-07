@@ -3,7 +3,8 @@
  */
 
 import Mailgun from 'mailgun.js';
-import type { EmailService, SendEmailOptions, SendEmailResult } from './types';
+import type { SendEmailOptions, SendEmailResult } from './types';
+import { AbstractEmailService } from './base';
 
 // Type for Mailgun message data - using the SDK's expected structure
 type MailgunMessageData = {
@@ -22,31 +23,54 @@ type MailgunMessageData = {
   [key: string]: unknown;
 };
 
-export class MailgunEmailService implements EmailService {
-  private apiKey: string;
-  private domain: string;
-  private defaultFrom: string;
-  private client: ReturnType<typeof Mailgun.prototype.client>;
+export class MailgunEmailService extends AbstractEmailService {
+  private readonly apiKey: string;
+  private readonly domain: string;
+  private readonly defaultFrom: string;
+  private readonly client: ReturnType<typeof Mailgun.prototype.client>;
 
   constructor(
     apiKey: string,
     domain: string,
     defaultFrom: string = 'KH Hub <noreply@khhub.app>'
   ) {
+    super();
     this.apiKey = apiKey;
     this.domain = domain;
     this.defaultFrom = defaultFrom;
-    
+
     // Initialize Mailgun client with native FormData (Cloudflare Workers compatible)
     const mailgun = new Mailgun(FormData);
     this.client = mailgun.client({
       username: 'api',
       key: apiKey,
-      url: 'https://api.mailgun.net', // Use 'https://api.eu.mailgun.net' for EU domains
+      url: 'https://api.mailgun.net',
     });
   }
 
   async sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
+    const messageData = this.createMessageData(options);
+
+    try {
+      // Type assertion: we ensure html is always provided, satisfying MailgunMessageContent requirement
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await this.client.messages.create(this.domain, messageData as any);
+
+      return {
+        id: response.id,
+        status: 'queued',
+        error: undefined,
+      };
+    } catch (error: unknown) {
+      console.error('Failed to send email with Mailgun:', error);
+      return {
+        status: 'failed',
+        error: this.getErrorMessage(error),
+      };
+    }
+  }
+
+  private createMessageData(options: SendEmailOptions): MailgunMessageData {
     const {
       to,
       subject,
@@ -60,18 +84,11 @@ export class MailgunEmailService implements EmailService {
       headers,
     } = options;
 
-    // Normalize recipients to arrays
-    const toArray = Array.isArray(to) ? to : [to];
-    const ccArray = cc ? (Array.isArray(cc) ? cc : [cc]) : undefined;
-    const bccArray = bcc ? (Array.isArray(bcc) ? bcc : [bcc]) : undefined;
-
-    // Build message data object for Mailgun SDK
-    // MailgunMessageData requires at least one of: text, html, message, or template
     const messageData: MailgunMessageData = {
       from,
-      to: toArray,
+      to: this.normalizeToRecipients(to),
       subject,
-      html, // Required: at least one of text/html/message/template
+      html,
     };
 
     if (text) {
@@ -82,60 +99,30 @@ export class MailgunEmailService implements EmailService {
       messageData['h:Reply-To'] = replyTo;
     }
 
+    const ccArray = this.normalizeRecipients(cc);
     if (ccArray) {
       messageData.cc = ccArray;
     }
 
+    const bccArray = this.normalizeRecipients(bcc);
     if (bccArray) {
       messageData.bcc = bccArray;
     }
 
-    // Mailgun uses tags as array of strings
     if (tags) {
       if (Array.isArray(tags)) {
         messageData['o:tag'] = tags;
       } else {
-        // If tags is Record<string, string>, convert to array of key-value pairs
         messageData['o:tag'] = Object.entries(tags).map(([key, value]) => `${key}:${value}`);
       }
     }
 
-    // Mailgun custom headers use h: prefix
     if (headers) {
       Object.entries(headers).forEach(([key, value]) => {
-        // Use index signature for custom headers
         (messageData as Record<string, unknown>)[`h:${key}`] = value;
       });
     }
 
-    try {
-      // Type assertion: we ensure html is always provided, satisfying MailgunMessageContent requirement
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await this.client.messages.create(this.domain, messageData as any);
-
-      return {
-        id: response.id,
-        status: 'queued', // Mailgun queues emails by default
-        error: undefined,
-      };
-    } catch (error: unknown) {
-      console.error('Failed to send email with Mailgun:', error);
-      
-      let errorMessage = 'Unknown error';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        errorMessage = String(error.message);
-      }
-
-      return {
-        status: 'failed',
-        error: errorMessage,
-      };
-    }
-  }
-
-  async sendSimpleEmail(to: string, subject: string, html: string, text?: string): Promise<SendEmailResult> {
-    return this.sendEmail({ to, subject, html, text });
+    return messageData;
   }
 }

@@ -41,6 +41,9 @@ const mockUseSearch = vi.fn().mockReturnValue({ token: 'test-token' });
 (globalThis as any).__mockNavigate__ = mockNavigate;
 (globalThis as any).__mockUseSearch__ = mockUseSearch;
 
+const TEST_PASSWORD = 'password123';
+const TEST_NEW_PASSWORD = 'newpass123';
+
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -52,7 +55,7 @@ vi.mock('react-i18next', () => ({
 // Mock TanStack Router
 vi.mock('@tanstack/react-router', async () => {
   const React = await import('react');
-  
+
   return {
     createFileRoute: vi.fn((path: string) => (config: any) => {
       const routeConfig = {
@@ -80,7 +83,8 @@ const mockFormHandleSubmit = vi.fn();
 const mockFormReset = vi.fn();
 let mockFormState = { isSubmitting: false };
 let mockOnSubmit: (({ value }: any) => Promise<void>) | null = null;
-let mockNewPasswordField = {
+// Explicitly type as any
+let mockNewPasswordField: any = {
   state: {
     value: '',
     meta: {
@@ -91,7 +95,7 @@ let mockNewPasswordField = {
   handleChange: vi.fn(),
   handleBlur: vi.fn(),
 };
-let mockConfirmPasswordField = {
+let mockConfirmPasswordField: any = {
   state: {
     value: '',
     meta: {
@@ -188,7 +192,7 @@ vi.mock('@/lib/form-utils', () => ({
 // Mock Button component
 vi.mock('@/components/ui/button', async () => {
   const React = await import('react');
-  
+
   return {
     Button: ({ children, variant, type, className, disabled, onClick, asChild, ...props }: any) => {
       if (asChild) {
@@ -361,7 +365,7 @@ describe('ResetPasswordPage', () => {
       handleBlur: vi.fn(),
     };
     mockGetFieldValue.mockReturnValue('');
-    
+
     (globalThis as any).__mockT__.mockImplementation((key: string) => {
       const translations: Record<string, string> = {
         'auth.resetPassword.title': 'Reset Password',
@@ -388,14 +392,14 @@ describe('ResetPasswordPage', () => {
 
   it('should render the component', () => {
     render(<route.component />);
-    
+
     const titles = screen.getAllByText('Reset Password');
     expect(titles.length).toBeGreaterThan(0);
   });
 
   it('should render card with title', () => {
     render(<route.component />);
-    
+
     const titles = screen.getAllByText('Reset Password');
     const title = titles.find(t => t.tagName === 'H3');
     expect(title).toBeDefined();
@@ -404,16 +408,16 @@ describe('ResetPasswordPage', () => {
 
   it('should render card with description', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('Enter your new password')).toBeDefined();
   });
 
   it('should render new password input field', () => {
     render(<route.component />);
-    
+
     const newPasswordLabel = screen.getByText('New Password');
     expect(newPasswordLabel).toBeDefined();
-    
+
     const newPasswordInput = screen.getByLabelText('New Password');
     expect(newPasswordInput).toBeDefined();
     expect(newPasswordInput).toHaveProperty('type', 'password');
@@ -421,10 +425,10 @@ describe('ResetPasswordPage', () => {
 
   it('should render confirm password input field', () => {
     render(<route.component />);
-    
+
     const confirmPasswordLabel = screen.getByText('Confirm Password');
     expect(confirmPasswordLabel).toBeDefined();
-    
+
     const confirmPasswordInput = screen.getByLabelText('Confirm Password');
     expect(confirmPasswordInput).toBeDefined();
     expect(confirmPasswordInput).toHaveProperty('type', 'password');
@@ -432,14 +436,14 @@ describe('ResetPasswordPage', () => {
 
   it('should render password inputs with placeholders', () => {
     render(<route.component />);
-    
+
     const placeholders = screen.getAllByPlaceholderText('••••••••');
     expect(placeholders.length).toBe(2);
   });
 
   it('should render submit button', () => {
     render(<route.component />);
-    
+
     const buttons = screen.getAllByText('Reset Password');
     const submitButton = buttons.find(btn => btn.closest('[data-testid="button"]'));
     expect(submitButton).toBeDefined();
@@ -448,7 +452,7 @@ describe('ResetPasswordPage', () => {
 
   it('should render back to signin link', () => {
     render(<route.component />);
-    
+
     const backLink = screen.getByText('Back to Sign In');
     expect(backLink).toBeDefined();
     expect(backLink.closest('[data-testid="link"]')).toBeDefined();
@@ -456,14 +460,14 @@ describe('ResetPasswordPage', () => {
 
   it('should render back to signin link with correct href', () => {
     render(<route.component />);
-    
+
     const backLink = screen.getByText('Back to Sign In').closest('[data-testid="link"]');
     expect(backLink?.getAttribute('href')).toBe('/auth/signin');
   });
 
   it('should render arrow left icon in back link', () => {
     render(<route.component />);
-    
+
     const backLink = screen.getByText('Back to Sign In').closest('[data-testid="link"]');
     const arrowIcon = backLink?.querySelector('[data-testid="icon-arrow-left"]');
     expect(arrowIcon).toBeDefined();
@@ -471,36 +475,36 @@ describe('ResetPasswordPage', () => {
 
   it('should render invalid link state when token is missing', () => {
     (globalThis as any).__mockUseSearch__.mockReturnValue({ token: '' });
-    
+
     render(<route.component />);
-    
+
     expect(screen.getByText('Invalid Reset Link')).toBeDefined();
     expect(screen.getByText('This password reset link is invalid or has expired')).toBeDefined();
   });
 
   it('should render request new link button in invalid link state', () => {
     (globalThis as any).__mockUseSearch__.mockReturnValue({ token: '' });
-    
+
     render(<route.component />);
-    
+
     expect(screen.getByText('Request New Link')).toBeDefined();
   });
 
   it('should render request new link button with correct href', () => {
     (globalThis as any).__mockUseSearch__.mockReturnValue({ token: '' });
-    
+
     render(<route.component />);
-    
+
     const requestLink = screen.getByText('Request New Link').closest('[data-testid="link"]');
     expect(requestLink?.getAttribute('href')).toBe('/auth/forgot-password');
   });
 
   it('should call resetPassword with correct params when onSubmit is called', async () => {
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       await mockOnSubmit({ value: { newPassword: 'newpass123', confirmPassword: 'newpass123' } });
-      
+
       expect((globalThis as any).__mockResetPassword__).toHaveBeenCalledWith({
         newPassword: 'newpass123',
         token: 'test-token',
@@ -510,12 +514,12 @@ describe('ResetPasswordPage', () => {
 
   it('should set serverError when token is missing in onSubmit', async () => {
     (globalThis as any).__mockUseSearch__.mockReturnValue({ token: '' });
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
-      await mockOnSubmit({ value: { newPassword: 'newpass123', confirmPassword: 'newpass123' } });
-      
+      await mockOnSubmit({ value: { newPassword: TEST_NEW_PASSWORD, confirmPassword: TEST_NEW_PASSWORD } });
+
       expect((globalThis as any).__mockResetPassword__).not.toHaveBeenCalled();
     }
   });
@@ -526,28 +530,28 @@ describe('ResetPasswordPage', () => {
         message: 'Invalid token',
       },
     });
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
-      await mockOnSubmit({ value: { newPassword: 'newpass123', confirmPassword: 'newpass123' } });
-      
+      await mockOnSubmit({ value: { newPassword: TEST_NEW_PASSWORD, confirmPassword: TEST_NEW_PASSWORD } });
+
       expect((globalThis as any).__mockResetPassword__).toHaveBeenCalled();
     }
   });
 
   it('should handle error when resetPassword throws', async () => {
     (globalThis as any).__mockResetPassword__.mockRejectedValue(new Error('Network error'));
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       try {
-        await mockOnSubmit({ value: { newPassword: 'newpass123', confirmPassword: 'newpass123' } });
+        await mockOnSubmit({ value: { newPassword: TEST_NEW_PASSWORD, confirmPassword: TEST_NEW_PASSWORD } });
       } catch {
         // Error is handled in component
       }
-      
+
       expect((globalThis as any).__mockResetPassword__).toHaveBeenCalled();
     }
   });
@@ -564,16 +568,16 @@ describe('ResetPasswordPage', () => {
       handleChange: vi.fn(),
       handleBlur: vi.fn(),
     };
-    
+
     render(<route.component />);
-    
+
     const errorMessage = screen.getByTestId('form-message');
     expect(errorMessage).toBeDefined();
     expect(errorMessage.textContent).toBe('Password must be at least 8 characters');
   });
 
   it('should show form validation error when confirmPassword does not match', () => {
-    mockGetFieldValue.mockReturnValue('password123');
+    mockGetFieldValue.mockReturnValue(TEST_PASSWORD);
     mockConfirmPasswordField = {
       state: {
         value: 'different',
@@ -585,9 +589,9 @@ describe('ResetPasswordPage', () => {
       handleChange: vi.fn(),
       handleBlur: vi.fn(),
     };
-    
+
     render(<route.component />);
-    
+
     const errorMessages = screen.getAllByTestId('form-message');
     const confirmPasswordError = errorMessages.find(msg => msg.textContent === 'Passwords do not match');
     expect(confirmPasswordError).toBeDefined();
@@ -595,9 +599,9 @@ describe('ResetPasswordPage', () => {
 
   it('should disable inputs when form is submitting', () => {
     mockFormState = { isSubmitting: true };
-    
+
     render(<route.component />);
-    
+
     const inputs = screen.getAllByTestId('input');
     inputs.forEach((input) => {
       expect(input).toHaveProperty('disabled', true);
@@ -606,9 +610,9 @@ describe('ResetPasswordPage', () => {
 
   it('should disable submit button when form is submitting', () => {
     mockFormState = { isSubmitting: true };
-    
+
     render(<route.component />);
-    
+
     const submitButton = screen.getByText('Resetting...');
     expect(submitButton).toBeDefined();
     expect(submitButton.closest('[data-testid="button"]')?.hasAttribute('disabled')).toBe(true);
@@ -616,49 +620,49 @@ describe('ResetPasswordPage', () => {
 
   it('should show submitting text when form is submitting', () => {
     mockFormState = { isSubmitting: true };
-    
+
     render(<route.component />);
-    
+
     expect(screen.getByText('Resetting...')).toBeDefined();
   });
 
   it('should call field handleChange when input value changes', async () => {
     const { userEvent } = await import('@testing-library/user-event');
     const user = userEvent.setup();
-    
+
     render(<route.component />);
-    
-    const newPasswordInput = screen.getByLabelText('New Password') as HTMLInputElement;
+
+    const newPasswordInput = screen.getByLabelText('New Password');
     await user.type(newPasswordInput, 'newpass123');
-    
+
     expect(mockNewPasswordField.handleChange).toHaveBeenCalled();
   });
 
   it('should call field handleBlur when input loses focus', async () => {
     const { userEvent } = await import('@testing-library/user-event');
     const user = userEvent.setup();
-    
+
     render(<route.component />);
-    
+
     const newPasswordInput = screen.getByLabelText('New Password');
     await user.click(newPasswordInput);
     await user.tab();
-    
+
     expect(mockNewPasswordField.handleBlur).toHaveBeenCalled();
   });
 
   it('should call form handleSubmit when form is submitted', async () => {
     const { userEvent } = await import('@testing-library/user-event');
     const user = userEvent.setup();
-    
+
     mockFormHandleSubmit.mockImplementation(async () => {
       if (mockOnSubmit) {
-        await mockOnSubmit({ value: { newPassword: 'newpass123', confirmPassword: 'newpass123' } });
+        await mockOnSubmit({ value: { newPassword: TEST_NEW_PASSWORD, confirmPassword: TEST_NEW_PASSWORD } });
       }
     });
-    
+
     render(<route.component />);
-    
+
     const buttons = screen.getAllByText('Reset Password');
     const submitButton = buttons.find(btn => btn.closest('[data-testid="button"]'));
     expect(submitButton).toBeDefined();
@@ -670,14 +674,14 @@ describe('ResetPasswordPage', () => {
 
   it('should set success state on successful submission', async () => {
     (globalThis as any).__mockResetPassword__.mockResolvedValue({ error: null });
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
-      await mockOnSubmit({ value: { newPassword: 'newpass123', confirmPassword: 'newpass123' } });
-      
+      await mockOnSubmit({ value: { newPassword: TEST_NEW_PASSWORD, confirmPassword: TEST_NEW_PASSWORD } });
+
       expect((globalThis as any).__mockResetPassword__).toHaveBeenCalledWith({
-        newPassword: 'newpass123',
+        newPassword: TEST_NEW_PASSWORD,
         token: 'test-token',
       });
     }
@@ -685,18 +689,18 @@ describe('ResetPasswordPage', () => {
 
   it('should clear serverError at start of onSubmit', async () => {
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       // First call with error
       (globalThis as any).__mockResetPassword__.mockResolvedValueOnce({
         error: { message: 'Error 1' },
       });
-      await mockOnSubmit({ value: { newPassword: 'newpass123', confirmPassword: 'newpass123' } });
-      
+      await mockOnSubmit({ value: { newPassword: TEST_NEW_PASSWORD, confirmPassword: TEST_NEW_PASSWORD } });
+
       // Second call should clear previous error
       (globalThis as any).__mockResetPassword__.mockResolvedValueOnce({ error: null });
       await mockOnSubmit({ value: { newPassword: 'newpass456', confirmPassword: 'newpass456' } });
-      
+
       // Both calls should have been made
       expect((globalThis as any).__mockResetPassword__).toHaveBeenCalledTimes(2);
     }
@@ -706,7 +710,7 @@ describe('ResetPasswordPage', () => {
     // We can't easily mock useState, so we'll test the component structure
     // by checking that the form renders correctly initially
     render(<route.component />);
-    
+
     // Initially, success state should not be shown
     expect(screen.queryByText('Password Reset Successful')).toBeNull();
     const titles = screen.getAllByText('Reset Password');
@@ -715,7 +719,7 @@ describe('ResetPasswordPage', () => {
 
   it('should call translation function for all text keys', () => {
     render(<route.component />);
-    
+
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('auth.resetPassword.title');
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('auth.resetPassword.description');
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('auth.resetPassword.newPassword');
@@ -726,17 +730,19 @@ describe('ResetPasswordPage', () => {
 
   it('should render form with correct structure', () => {
     render(<route.component />);
-    
+
     const form = screen.getByTestId('form');
     expect(form).toBeDefined();
-    
-    const card = form.closest('[data-testid="card"]');
+
+    // AuthCard (Card) is now inside Form
+    const card = screen.getByTestId('card');
     expect(card).toBeDefined();
+    expect(form.contains(card)).toBe(true);
   });
 
   it('should render card with backdrop blur styling', () => {
     const { container } = render(<route.component />);
-    
+
     const card = container.querySelector('[data-testid="card"]');
     expect(card?.className).toContain('backdrop-blur-sm');
   });
@@ -745,12 +751,12 @@ describe('ResetPasswordPage', () => {
     (globalThis as any).__mockResetPassword__.mockResolvedValue({
       error: {},
     });
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
-      await mockOnSubmit({ value: { newPassword: 'newpass123', confirmPassword: 'newpass123' } });
-      
+      await mockOnSubmit({ value: { newPassword: TEST_NEW_PASSWORD, confirmPassword: TEST_NEW_PASSWORD } });
+
       expect((globalThis as any).__mockResetPassword__).toHaveBeenCalled();
     }
   });
