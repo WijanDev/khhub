@@ -12,7 +12,7 @@ vi.mock('mailgun.js', () => {
 
   class MockMailgun {
     client = mockClient;
-    constructor(_formData: typeof FormData) {}
+    constructor(_formData: typeof FormData) { }
   }
 
   return {
@@ -28,18 +28,17 @@ describe('MailgunEmailService', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    global.FormData = FormData;
+    globalThis.FormData = FormData;
     const mailgunModule = await import('mailgun.js');
     mockMessagesCreate = (mailgunModule as any).__mockMessagesCreate;
     mockClient = (mailgunModule as any).__mockClient;
   });
 
   describe('constructor', () => {
-    it('should initialize with apiKey, domain, and defaultFrom', () => {
+    it('should initialize with domain and defaultFrom', () => {
       const service = new MailgunEmailService('test-api-key', 'test-domain.com', 'Test <test@example.com>');
-      
+
       expect(service).toBeDefined();
-      expect((service as any).apiKey).toBe('test-api-key');
       expect((service as any).domain).toBe('test-domain.com');
       expect((service as any).defaultFrom).toBe('Test <test@example.com>');
       expect(mockClient).toHaveBeenCalledWith({
@@ -51,7 +50,7 @@ describe('MailgunEmailService', () => {
 
     it('should use default from email when not provided', () => {
       const service = new MailgunEmailService('test-api-key', 'test-domain.com');
-      
+
       expect((service as any).defaultFrom).toBe('KH Hub <noreply@khhub.app>');
     });
   });
@@ -273,7 +272,7 @@ describe('MailgunEmailService', () => {
     it('should handle error from Mailgun API', async () => {
       const error = new Error('Mailgun API error');
       mockMessagesCreate.mockRejectedValue(error);
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       const result = await service.sendEmail({
         to: 'recipient@example.com',
@@ -292,7 +291,7 @@ describe('MailgunEmailService', () => {
     it('should handle error with message property', async () => {
       const error = { message: 'Custom error message' };
       mockMessagesCreate.mockRejectedValue(error);
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       const result = await service.sendEmail({
         to: 'recipient@example.com',
@@ -310,7 +309,7 @@ describe('MailgunEmailService', () => {
     it('should handle unknown error format', async () => {
       const error = { code: 500 };
       mockMessagesCreate.mockRejectedValue(error);
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       const result = await service.sendEmail({
         to: 'recipient@example.com',

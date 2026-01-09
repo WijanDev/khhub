@@ -231,10 +231,6 @@ describe('createEmailService', () => {
 });
 
 describe('exports', () => {
-  it('should export EmailTemplates', () => {
-    expect(EmailTemplates).toBeDefined();
-  });
-
   it('should export UnosendEmailService class', () => {
     expect(UnosendEmailService).toBeDefined();
   });
