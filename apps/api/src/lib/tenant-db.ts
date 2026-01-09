@@ -17,9 +17,9 @@ interface RawTenantConnection {
  * Handles dynamic connections to tenant-specific databases
  */
 export class TenantDbManager {
-  private connections: Map<string, TenantConnection[]> = new Map();
+  private readonly connections: Map<string, TenantConnection[]> = new Map();
 
-  constructor(private centralDb: D1Database) { }
+  constructor(private readonly centralDb: D1Database) { }
 
   /**
    * Get all connections for a tenant

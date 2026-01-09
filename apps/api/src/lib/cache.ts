@@ -11,8 +11,8 @@ export interface CacheOptions {
 }
 
 export class CacheManager {
-  private kv: KVNamespace;
-  private prefix: string;
+  private readonly kv: KVNamespace;
+  private readonly prefix: string;
 
   constructor(kv: KVNamespace, prefix: string = 'khhub') {
     this.kv = kv;
@@ -58,7 +58,7 @@ export class CacheManager {
   async deleteByPrefix(keyPrefix: string): Promise<number> {
     const fullPrefix = this.key(keyPrefix);
     const list = await this.kv.list({ prefix: fullPrefix });
-    
+
     await Promise.all(list.keys.map((k) => this.kv.delete(k.name)));
     return list.keys.length;
   }
@@ -100,7 +100,7 @@ export class CacheManager {
    */
   async purgeAll(): Promise<number> {
     const list = await this.kv.list({ prefix: `${this.prefix}:` });
-    
+
     await Promise.all(list.keys.map((k) => this.kv.delete(k.name)));
     return list.keys.length;
   }

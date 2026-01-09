@@ -42,8 +42,8 @@ export interface ListResult {
 }
 
 export class StorageManager {
-  private bucket: R2Bucket;
-  private basePrefix: string;
+  private readonly bucket: R2Bucket;
+  private readonly basePrefix: string;
 
   constructor(bucket: R2Bucket, basePrefix: string = '') {
     this.bucket = bucket;

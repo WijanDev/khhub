@@ -24,7 +24,6 @@ type MailgunMessageData = {
 };
 
 export class MailgunEmailService extends AbstractEmailService {
-  private readonly apiKey: string;
   private readonly domain: string;
   private readonly defaultFrom: string;
   private readonly client: ReturnType<typeof Mailgun.prototype.client>;
@@ -35,7 +34,6 @@ export class MailgunEmailService extends AbstractEmailService {
     defaultFrom: string = 'KH Hub <noreply@khhub.app>'
   ) {
     super();
-    this.apiKey = apiKey;
     this.domain = domain;
     this.defaultFrom = defaultFrom;
 

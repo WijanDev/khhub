@@ -84,13 +84,15 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       const { name, status } = c.req.valid('json');
 
       const db = createDb(c.env.DB);
+      const updateData: any = {
+        updatedAt: sql`datetime('now')`,
+      };
+      if (name) updateData.name = name;
+      if (status) updateData.status = status as 'active' | 'inactive' | 'suspended';
+
       const [tenant] = await db
         .update(tenants)
-        .set({
-          ...(name && { name }),
-          ...(status && { status: status as 'active' | 'inactive' | 'suspended' }),
-          updatedAt: sql`datetime('now')`,
-        })
+        .set(updateData)
         .where(eq(tenants.id, id))
         .returning();
 

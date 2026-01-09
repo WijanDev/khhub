@@ -21,24 +21,24 @@ export interface AuthSession {
     name: string;
     email: string;
     emailVerified: boolean;
-    image: string | null;
-    role: 'user' | 'admin';
-    banned: boolean;
-    banReason: string | null;
-    banExpires: number | null;
-    createdAt: string;
-    updatedAt: string;
+    image?: string | null;
+    role?: string | null;
+    banned?: boolean | null;
+    banReason?: string | null;
+    banExpires?: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
   };
   session: {
     id: string;
     userId: string;
     token: string;
-    expiresAt: string;
-    ipAddress: string | null;
-    userAgent: string | null;
-    impersonatedBy: string | null;
-    createdAt: string;
-    updatedAt: string;
+    expiresAt: Date;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    impersonatedBy?: string | null;
+    createdAt: Date;
+    updatedAt: Date;
   };
 }
 

@@ -7,7 +7,6 @@ import type { SendEmailOptions, SendEmailResult } from './types';
 import { AbstractEmailService } from './base';
 
 export class ResendEmailService extends AbstractEmailService {
-  private readonly apiKey: string;
   private readonly defaultFrom: string;
   private readonly client: Resend;
 
@@ -16,7 +15,6 @@ export class ResendEmailService extends AbstractEmailService {
     defaultFrom: string = 'KH Hub <noreply@khhub.app>'
   ) {
     super();
-    this.apiKey = apiKey;
     this.defaultFrom = defaultFrom;
     this.client = new Resend(apiKey);
   }
