@@ -1,4 +1,4 @@
-import { useQuery, useSuspenseQuery, useMutation, type UseQueryResult, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery, useMutation, type UseQueryResult, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { usersApi } from '@/lib/api-client';
 
 export interface User {
@@ -67,8 +67,6 @@ export function useUser(id: string): UseQueryResult<UserResponse, Error> {
   });
 }
 
-import type { QueryClient } from '@tanstack/react-query';
-
 // Prefetch users (for use in loaders)
 export async function prefetchUsers(queryClient: QueryClient) {
   return queryClient.prefetchQuery({
@@ -104,12 +102,12 @@ export function useUserSuspense(id: string) {
 // Delete user function
 async function deleteUser(id: string): Promise<{ message: string; user: { id: string; email: string; name: string } }> {
   const response = await usersApi[':id'].$delete({ param: { id } });
-  
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error((error as { message: string }).message || 'Failed to delete user');
   }
-  
+
   const result = await response.json();
   return result;
 }

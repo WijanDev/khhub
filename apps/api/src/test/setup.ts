@@ -5,54 +5,54 @@ import type { Env } from '../types';
 beforeEach(() => {
   // Reset all mocks before each test
   vi.clearAllMocks();
-  
+
   // Mock global fetch if needed
-  global.fetch = global.fetch || vi.fn();
+  globalThis.fetch = globalThis.fetch || vi.fn();
 });
 
 // Mock KVNamespace for testing
 export function createMockKV(): KVNamespace {
   const store = new Map<string, { value: string; expiration?: number }>();
-  
+
   return {
     get: vi.fn(async (key: string, type?: 'text' | 'json' | 'arrayBuffer' | 'stream') => {
       const item = store.get(key);
       if (!item) return null;
-      
+
       // Check expiration
       if (item.expiration && Date.now() / 1000 > item.expiration) {
         store.delete(key);
         return null;
       }
-      
+
       if (type === 'json') {
         return JSON.parse(item.value);
       }
       return item.value;
     }),
-    
+
     put: vi.fn(async (key: string, value: string, options?: { expirationTtl?: number; expiration?: number }) => {
       let expiration: number | undefined;
-      
+
       if (options?.expiration) {
         expiration = options.expiration;
       } else if (options?.expirationTtl) {
         expiration = Math.floor(Date.now() / 1000) + options.expirationTtl;
       }
-      
+
       store.set(key, { value, expiration });
     }),
-    
+
     delete: vi.fn(async (key: string) => {
       store.delete(key);
     }),
-    
+
     list: vi.fn(async (options?: { prefix?: string; limit?: number; cursor?: string }) => {
       const prefix = options?.prefix || '';
       const matchingKeys = Array.from(store.keys())
         .filter(key => key.startsWith(prefix))
         .slice(0, options?.limit || 1000);
-      
+
       return {
         keys: matchingKeys.map(name => ({
           name,

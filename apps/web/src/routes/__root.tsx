@@ -1,5 +1,4 @@
-import { createRootRoute, Link, Outlet, useLocation } from '@tanstack/react-router';
-import { HeadContent, Scripts } from '@tanstack/react-router';
+import { createRootRoute, Link, Outlet, useLocation, HeadContent, Scripts } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -27,11 +26,10 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  const { i18n } = useTranslation();
   const location = useLocation();
   const isAppRoute = location.pathname.startsWith('/app');
   const isAuthRoute = location.pathname.startsWith('/auth');
-  
+
   // Normalize language code to prevent hydration mismatch (e.g., 'es-ES' -> 'es')
   const normalizedLang = getCurrentLanguage();
 
@@ -40,7 +38,7 @@ function RootComponent() {
       <head>
         <HeadContent />
       </head>
-      <body 
+      <body
         className="min-h-screen bg-background font-sans antialiased"
         suppressHydrationWarning
       >
@@ -75,7 +73,7 @@ function RootComponent() {
   );
 }
 
-function PublicHeader({ isAuthRoute }: { isAuthRoute: boolean }) {
+function PublicHeader({ isAuthRoute }: Readonly<{ isAuthRoute: boolean }>) {
   const { t } = useTranslation();
   const { data: session, isPending } = useSession();
 

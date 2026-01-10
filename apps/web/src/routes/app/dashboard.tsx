@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Activity, 
-  Users, 
-  Building2, 
+import {
+  Activity,
+  Users,
+  Building2,
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
@@ -52,11 +52,11 @@ function DashboardPage() {
   ];
 
   const recentActivity = [
-    { action: 'New user registered', user: 'alice@example.com', time: '2 minutes ago' },
-    { action: 'Tenant created', user: 'admin@example.com', time: '15 minutes ago' },
-    { action: 'Settings updated', user: 'bob@example.com', time: '1 hour ago' },
-    { action: 'New user registered', user: 'charlie@example.com', time: '2 hours ago' },
-    { action: 'Database connection added', user: 'admin@example.com', time: '3 hours ago' },
+    { id: 1, action: 'New user registered', user: 'alice@example.com', time: '2 minutes ago' },
+    { id: 2, action: 'Tenant created', user: 'admin@example.com', time: '15 minutes ago' },
+    { id: 3, action: 'Settings updated', user: 'bob@example.com', time: '1 hour ago' },
+    { id: 4, action: 'New user registered', user: 'charlie@example.com', time: '2 hours ago' },
+    { id: 5, action: 'Database connection added', user: 'admin@example.com', time: '3 hours ago' },
   ];
 
   return (
@@ -108,9 +108,9 @@ function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((item, index) => (
+              {recentActivity.map((item) => (
                 <div
-                  key={index}
+                  key={item.id}
                   className="flex items-center justify-between border-b border-border/40 pb-4 last:border-0 last:pb-0"
                 >
                   <div>

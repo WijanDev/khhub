@@ -46,13 +46,15 @@ i18n
     },
   });
 
-export default i18n;
+const customI18n = i18n;
+
+export default customI18n;
 
 /**
  * Change the current language
  */
 export function changeLanguage(lng: LanguageCode) {
-  return i18n.changeLanguage(lng);
+  return customI18n.changeLanguage(lng);
 }
 
 /**
@@ -60,7 +62,7 @@ export function changeLanguage(lng: LanguageCode) {
  * Normalizes language codes (e.g., 'es-ES' -> 'es') to prevent hydration mismatches
  */
 export function getCurrentLanguage(): LanguageCode {
-  const lang = i18n.language || defaultLanguage;
+  const lang = customI18n.language || defaultLanguage;
   // Extract base language code (before hyphen) to normalize 'es-ES' -> 'es'
   const baseLang = lang.split('-')[0] as LanguageCode;
   // Validate it's one of our supported languages, otherwise fallback to default
