@@ -2,15 +2,13 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
-import { Form } from '@/components/ui/form';
 import { signIn } from '@/lib/auth-client';
 import { SignInSchema } from '@khhub/shared';
 import { zodValidator, zodFieldValidator } from '@/lib/form-utils';
 import { EmailVerificationCard } from '@/components/ui/email-verification-card';
-import { AuthCard } from '@/components/auth/auth-card';
-import { AuthError } from '@/components/auth/auth-error';
-import { AuthFormField } from '@/components/auth/auth-form-field';
 import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
+import { BaseAuthForm } from '@/components/auth/base-auth-form';
+import { BaseAuthField } from '@/components/auth/base-auth-field';
 
 export const Route = createFileRoute('/auth/signin')({
   component: SignInPage,
@@ -79,86 +77,59 @@ function SignInPage() {
     },
   });
 
+  if (emailNotVerified) {
+    return <EmailVerificationCard userEmail={userEmail} />;
+  }
+
   return (
-    emailNotVerified ? (
-      <EmailVerificationCard userEmail={userEmail} />
-    ) : (
-      <Form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="w-full max-w-md"
-      >
-        <AuthCard
-          title={t('auth.signIn.title')}
-          description={t('auth.signIn.description')}
-          footer={
-            <>
-              <AuthFormSubmit
-                isSubmitting={form.state.isSubmitting}
-                labelKey="auth.signIn.submit"
-                submittingLabelKey="auth.signIn.submitting"
-              />
-              <p className="text-center text-sm text-muted-foreground">
-                {t('auth.signIn.noAccount')}{' '}
-                <Link to="/auth/signup" className="font-medium text-primary hover:underline">
-                  {t('auth.signIn.createAccount')}
-                </Link>
-              </p>
-            </>
-          }
-        >
-          <div className="space-y-4">
-            <AuthError error={serverError} />
+    <BaseAuthForm
+      form={form}
+      title={t('auth.signIn.title')}
+      description={t('auth.signIn.description')}
+      serverError={serverError}
+      footer={
+        <>
+          <AuthFormSubmit
+            isSubmitting={form.state.isSubmitting}
+            labelKey="auth.signIn.submit"
+            submittingLabelKey="auth.signIn.submitting"
+          />
+          <p className="text-center text-sm text-muted-foreground">
+            {t('auth.signIn.noAccount')}{' '}
+            <Link to="/auth/signup" className="font-medium text-primary hover:underline">
+              {t('auth.signIn.createAccount')}
+            </Link>
+          </p>
+        </>
+      }
+    >
+      <BaseAuthField
+        Field={form.Field}
+        name="email"
+        label={t('auth.signIn.email')}
+        type="email"
+        placeholder="name@example.com"
+        validator={zodFieldValidator(SignInSchema.shape.email)}
+        disabled={form.state.isSubmitting}
+      />
 
-            <form.Field
-              name="email"
-              validators={{
-                onChange: zodFieldValidator(SignInSchema.shape.email),
-              }}
-            >
-              {(field) => (
-                <AuthFormField
-                  field={field}
-                  id="email"
-                  label={t('auth.signIn.email')}
-                  type="email"
-                  placeholder="name@example.com"
-                  disabled={form.state.isSubmitting}
-                />
-              )}
-            </form.Field>
-
-            <form.Field
-              name="password"
-              validators={{
-                onChange: zodFieldValidator(SignInSchema.shape.password),
-              }}
-            >
-              {(field) => (
-                <AuthFormField
-                  field={field}
-                  id="password"
-                  label={t('auth.signIn.password')}
-                  type="password"
-                  placeholder="••••••••"
-                  disabled={form.state.isSubmitting}
-                  rightElement={
-                    <Link
-                      to="/auth/forgot-password"
-                      className="text-xs text-muted-foreground hover:text-primary"
-                    >
-                      {t('auth.signIn.forgotPassword')}
-                    </Link>
-                  }
-                />
-              )}
-            </form.Field>
-          </div>
-        </AuthCard>
-      </Form>
-    )
+      <BaseAuthField
+        Field={form.Field}
+        name="password"
+        label={t('auth.signIn.password')}
+        type="password"
+        placeholder="••••••••"
+        validator={zodFieldValidator(SignInSchema.shape.password)}
+        disabled={form.state.isSubmitting}
+        rightElement={
+          <Link
+            to="/auth/forgot-password"
+            className="text-xs text-muted-foreground hover:text-primary"
+          >
+            {t('auth.signIn.forgotPassword')}
+          </Link>
+        }
+      />
+    </BaseAuthForm>
   );
 }

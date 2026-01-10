@@ -4,14 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { requestPasswordReset } from '@/lib/auth-client';
 import { AuthCard } from '@/components/auth/auth-card';
-import { AuthError } from '@/components/auth/auth-error';
-import { AuthFormField } from '@/components/auth/auth-form-field';
 import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
+import { BaseAuthForm } from '@/components/auth/base-auth-form';
+import { BaseAuthField } from '@/components/auth/base-auth-field';
 
 // Simple schema for forgot password (just email)
 const ForgotPasswordFormSchema = z.object({
@@ -101,56 +100,37 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <Form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-      className="w-full max-w-md"
-    >
-      <AuthCard
-        title={t('auth.forgotPassword.title')}
-        description={t('auth.forgotPassword.description')}
-        footer={
-          <>
-            <AuthFormSubmit
-              isSubmitting={form.state.isSubmitting}
-              labelKey="auth.forgotPassword.submit"
-              submittingLabelKey="auth.forgotPassword.submitting"
-            />
-            <Link
-              to="/auth/signin"
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('auth.forgotPassword.backToSignIn')}
-            </Link>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <AuthError error={serverError} />
-
-          <form.Field
-            name="email"
-            validators={{
-              onChange: zodFieldValidator(ForgotPasswordFormSchema.shape.email),
-            }}
+    <BaseAuthForm
+      form={form}
+      title={t('auth.forgotPassword.title')}
+      description={t('auth.forgotPassword.description')}
+      serverError={serverError}
+      footer={
+        <>
+          <AuthFormSubmit
+            isSubmitting={form.state.isSubmitting}
+            labelKey="auth.forgotPassword.submit"
+            submittingLabelKey="auth.forgotPassword.submitting"
+          />
+          <Link
+            to="/auth/signin"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
           >
-            {(field) => (
-              <AuthFormField
-                field={field}
-                id="email"
-                label={t('auth.forgotPassword.email')}
-                type="email"
-                placeholder="name@example.com"
-                disabled={form.state.isSubmitting}
-              />
-            )}
-          </form.Field>
-        </div>
-      </AuthCard>
-    </Form>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('auth.forgotPassword.backToSignIn')}
+          </Link>
+        </>
+      }
+    >
+      <BaseAuthField
+        Field={form.Field}
+        name="email"
+        label={t('auth.forgotPassword.email')}
+        type="email"
+        placeholder="name@example.com"
+        validator={zodFieldValidator(ForgotPasswordFormSchema.shape.email)}
+        disabled={form.state.isSubmitting}
+      />
+    </BaseAuthForm>
   );
 }

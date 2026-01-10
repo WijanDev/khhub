@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 // Sign In
 export const SignInSchema = z.object({
-  email: z.string().email('validation.email.invalid'),
+  email: z.email('validation.email.invalid'),
   password: z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength'),
 });
 export type SignInInput = z.infer<typeof SignInSchema>;
@@ -15,7 +15,7 @@ export type SignInInput = z.infer<typeof SignInSchema>;
 // Sign Up
 export const SignUpSchema = z.object({
   name: z.string().min(2, 'validation.name.minLength').max(100, 'validation.name.maxLength'),
-  email: z.string().email('validation.email.invalid'),
+  email: z.email('validation.email.invalid'),
   password: z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength'),
 });
 export type SignUpInput = z.infer<typeof SignUpSchema>;
@@ -31,8 +31,8 @@ export type SignUpWithConfirmInput = z.infer<typeof SignUpWithConfirmSchema>;
 
 // Forgot Password
 export const ForgotPasswordSchema = z.object({
-  email: z.string().email('validation.email.invalid'),
-  redirectTo: z.string().url('validation.url.invalid').optional(),
+  email: z.email('validation.email.invalid'),
+  redirectTo: z.url('validation.url.invalid').optional(),
 });
 export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
 
@@ -72,7 +72,7 @@ export type ChangePasswordWithConfirmInput = z.infer<typeof ChangePasswordWithCo
 export const SessionUserSchema = z.object({
   id: z.string(),
   name: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   emailVerified: z.boolean(),
   image: z.string().nullable(),
   role: z.enum(['user', 'admin']),

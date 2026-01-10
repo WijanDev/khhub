@@ -3,15 +3,14 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { signUp } from '@/lib/auth-client';
 import { SignUpSchema } from '@khhub/shared';
 import { zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { EmailVerificationCard } from '@/components/ui/email-verification-card';
-import { AuthCard } from '@/components/auth/auth-card';
-import { AuthError } from '@/components/auth/auth-error';
-import { AuthFormField } from '@/components/auth/auth-form-field';
 import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
+import { BaseAuthForm } from '@/components/auth/base-auth-form';
+import { BaseAuthField } from '@/components/auth/base-auth-field';
+import { ConfirmPasswordField } from '@/components/auth/confirm-password-field';
 
 // Extended schema with password confirmation
 const SignUpFormSchema = SignUpSchema.extend({
@@ -71,118 +70,62 @@ function SignUpPage() {
   }
 
   return (
-    <>
-      {signUpSuccess ? <EmailVerificationCard userEmail={userEmail} /> : (
-        <Form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-          className="w-full max-w-md"
-        >
-          <AuthCard
-            title={t('auth.signUp.title')}
-            description={t('auth.signUp.description')}
-            footer={
-              <>
-                <AuthFormSubmit
-                  isSubmitting={form.state.isSubmitting}
-                  labelKey="auth.signUp.submit"
-                  submittingLabelKey="auth.signUp.submitting"
-                />
-                <p className="text-center text-sm text-muted-foreground">
-                  {t('auth.signUp.hasAccount')}{' '}
-                  <Link to="/auth/signin" className="font-medium text-primary hover:underline">
-                    {t('auth.signUp.signIn')}
-                  </Link>
-                </p>
-              </>
-            }
-          >
-            <div className="space-y-4">
-              <AuthError error={serverError} />
+    <BaseAuthForm
+      form={form}
+      title={t('auth.signUp.title')}
+      description={t('auth.signUp.description')}
+      serverError={serverError}
+      footer={
+        <>
+          <AuthFormSubmit
+            isSubmitting={form.state.isSubmitting}
+            labelKey="auth.signUp.submit"
+            submittingLabelKey="auth.signUp.submitting"
+          />
+          <p className="text-center text-sm text-muted-foreground">
+            {t('auth.signUp.hasAccount')}{' '}
+            <Link to="/auth/signin" className="font-medium text-primary hover:underline">
+              {t('auth.signUp.signIn')}
+            </Link>
+          </p>
+        </>
+      }
+    >
+      <BaseAuthField
+        Field={form.Field}
+        name="name"
+        label={t('auth.signUp.name')}
+        placeholder="John Doe"
+        validator={zodFieldValidator(SignUpSchema.shape.name)}
+        disabled={form.state.isSubmitting}
+      />
 
-              <form.Field
-                name="name"
-                validators={{
-                  onChange: zodFieldValidator(SignUpSchema.shape.name),
-                }}
-              >
-                {(field) => (
-                  <AuthFormField
-                    field={field}
-                    id="name"
-                    label={t('auth.signUp.name')}
-                    placeholder="John Doe"
-                    disabled={form.state.isSubmitting}
-                  />
-                )}
-              </form.Field>
+      <BaseAuthField
+        Field={form.Field}
+        name="email"
+        label={t('auth.signUp.email')}
+        type="email"
+        placeholder="name@example.com"
+        validator={zodFieldValidator(SignUpSchema.shape.email)}
+        disabled={form.state.isSubmitting}
+      />
 
-              <form.Field
-                name="email"
-                validators={{
-                  onChange: zodFieldValidator(SignUpSchema.shape.email),
-                }}
-              >
-                {(field) => (
-                  <AuthFormField
-                    field={field}
-                    id="email"
-                    label={t('auth.signUp.email')}
-                    type="email"
-                    placeholder="name@example.com"
-                    disabled={form.state.isSubmitting}
-                  />
-                )}
-              </form.Field>
+      <BaseAuthField
+        Field={form.Field}
+        name="password"
+        label={t('auth.signUp.password')}
+        type="password"
+        placeholder="••••••••"
+        validator={zodFieldValidator(SignUpSchema.shape.password)}
+        disabled={form.state.isSubmitting}
+      />
 
-              <form.Field
-                name="password"
-                validators={{
-                  onChange: zodFieldValidator(SignUpSchema.shape.password),
-                }}
-              >
-                {(field) => (
-                  <AuthFormField
-                    field={field}
-                    id="password"
-                    label={t('auth.signUp.password')}
-                    type="password"
-                    placeholder="••••••••"
-                    disabled={form.state.isSubmitting}
-                  />
-                )}
-              </form.Field>
-
-              <form.Field
-                name="confirmPassword"
-                validators={{
-                  onChange: ({ value, fieldApi }) => {
-                    const password = fieldApi.form.getFieldValue('password');
-                    if (value && password && value !== password) {
-                      return 'validation.password.mismatch';
-                    }
-                    return undefined;
-                  },
-                }}
-              >
-                {(field) => (
-                  <AuthFormField
-                    field={field}
-                    id="confirmPassword"
-                    label={t('auth.signUp.confirmPassword')}
-                    type="password"
-                    placeholder="••••••••"
-                    disabled={form.state.isSubmitting}
-                  />
-                )}
-              </form.Field>
-            </div>
-          </AuthCard>
-        </Form>
-      )}
-    </>
+      <ConfirmPasswordField
+        Field={form.Field}
+        passwordFieldName="password"
+        label={t('auth.signUp.confirmPassword')}
+        disabled={form.state.isSubmitting}
+      />
+    </BaseAuthForm>
   );
 }

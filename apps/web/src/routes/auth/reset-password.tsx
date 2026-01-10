@@ -4,17 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { resetPassword } from '@/lib/auth-client';
 import { AuthCard } from '@/components/auth/auth-card';
-import { AuthError } from '@/components/auth/auth-error';
-import { AuthFormField } from '@/components/auth/auth-form-field';
 import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
+import { BaseAuthForm } from '@/components/auth/base-auth-form';
+import { BaseAuthField } from '@/components/auth/base-auth-field';
+import { ConfirmPasswordField } from '@/components/auth/confirm-password-field';
 
 // Schema for password field
-const PasswordSchema = z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength');
+const PasswordSchema = z.string()
+  .min(8, { message: 'validation.password.minLength' })
+  .max(128, { message: 'validation.password.maxLength' });
 
 // Schema for reset password with confirmation
 const ResetPasswordFormSchema = z.object({
@@ -122,80 +124,44 @@ function ResetPasswordPage() {
   }
 
   return (
-    <Form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-      className="w-full max-w-md"
-    >
-      <AuthCard
-        title={t('auth.resetPassword.title')}
-        description={t('auth.resetPassword.description')}
-        footer={
-          <div className="flex flex-col space-y-4">
-            <AuthFormSubmit
-              isSubmitting={form.state.isSubmitting}
-              labelKey="auth.resetPassword.submit"
-              submittingLabelKey="auth.resetPassword.submitting"
-            />
-            <Link
-              to="/auth/signin"
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('auth.resetPassword.backToSignIn')}
-            </Link>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          <AuthError error={serverError} />
-
-          <form.Field
-            name="newPassword"
-            validators={{
-              onChange: zodFieldValidator(PasswordSchema),
-            }}
+    <BaseAuthForm
+      form={form}
+      title={t('auth.resetPassword.title')}
+      description={t('auth.resetPassword.description')}
+      serverError={serverError}
+      footer={
+        <div className="flex flex-col space-y-4">
+          <AuthFormSubmit
+            isSubmitting={form.state.isSubmitting}
+            labelKey="auth.resetPassword.submit"
+            submittingLabelKey="auth.resetPassword.submitting"
+          />
+          <Link
+            to="/auth/signin"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
           >
-            {(field) => (
-              <AuthFormField
-                field={field}
-                id="newPassword"
-                label={t('auth.resetPassword.newPassword')}
-                type="password"
-                placeholder="••••••••"
-                disabled={form.state.isSubmitting}
-              />
-            )}
-          </form.Field>
-
-          <form.Field
-            name="confirmPassword"
-            validators={{
-              onChange: ({ value, fieldApi }) => {
-                const password = fieldApi.form.getFieldValue('newPassword');
-                if (value && password && value !== password) {
-                  return 'validation.password.mismatch';
-                }
-                return undefined;
-              },
-            }}
-          >
-            {(field) => (
-              <AuthFormField
-                field={field}
-                id="confirmPassword"
-                label={t('auth.resetPassword.confirmPassword')}
-                type="password"
-                placeholder="••••••••"
-                disabled={form.state.isSubmitting}
-              />
-            )}
-          </form.Field>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('auth.resetPassword.backToSignIn')}
+          </Link>
         </div>
-      </AuthCard>
-    </Form>
+      }
+    >
+      <BaseAuthField
+        Field={form.Field}
+        name="newPassword"
+        label={t('auth.resetPassword.newPassword')}
+        type="password"
+        placeholder="••••••••"
+        validator={zodFieldValidator(PasswordSchema)}
+        disabled={form.state.isSubmitting}
+      />
+
+      <ConfirmPasswordField
+        Field={form.Field}
+        passwordFieldName="newPassword"
+        label={t('auth.resetPassword.confirmPassword')}
+        disabled={form.state.isSubmitting}
+      />
+    </BaseAuthForm>
   );
 }
