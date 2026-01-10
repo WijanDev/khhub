@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
+import { Building2, Plus, RefreshCw } from 'lucide-react';
 import { useTenantsSuspense, prefetchTenants, tenantKeys } from '@/lib/queries/tenants';
 import { getQueryClientFromContext } from '@/lib/router-utils';
 
@@ -24,6 +24,14 @@ function TenantsPage() {
   // Get data with suspense (uses prefetched data from loader)
   const { data } = useTenantsSuspense();
   const tenants = data.tenants;
+
+  const tenantColorMap = new Map<string | null, string>([
+    ['active', 'bg-green-500/10 text-green-500'],
+    ['suspended', 'bg-red-500/10 text-red-500'],
+    ['inactive', 'bg-yellow-500/10 text-yellow-500'],
+    ['pending', 'bg-yellow-500/10 text-yellow-500'],
+    [null, 'bg-gray-500/10 text-gray-500'],
+  ]);
 
   return (
     <div className="space-y-8">
@@ -79,18 +87,13 @@ function TenantsPage() {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    {t('app.tenants.createdAt', { 
-                      date: tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : 'N/A' 
+                    {t('app.tenants.createdAt', {
+                      date: tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : 'N/A'
                     })}
                   </span>
                   <span
-                    className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      tenant.status === 'active'
-                        ? 'bg-green-500/10 text-green-500'
-                        : tenant.status === 'suspended'
-                          ? 'bg-red-500/10 text-red-500'
-                          : 'bg-yellow-500/10 text-yellow-500'
-                    }`}
+                    className={`rounded-full px-2 py-1 text-xs font-medium ${tenantColorMap.get(tenant.status) || 'bg-green-500/10 text-green-500'
+                      }`}
                   >
                     {tenant.status || 'active'}
                   </span>

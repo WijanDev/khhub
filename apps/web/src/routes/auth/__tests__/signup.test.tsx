@@ -46,6 +46,8 @@ const mockNavigate = vi.fn();
 (globalThis as any).__mockSendVerificationEmail__ = mockSendVerificationEmail;
 (globalThis as any).__mockNavigate__ = mockNavigate;
 
+const TEST_PASSWORD = 'password123';
+
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -57,7 +59,7 @@ vi.mock('react-i18next', () => ({
 // Mock TanStack Router
 vi.mock('@tanstack/react-router', async () => {
   const React = await import('react');
-  
+
   return {
     createFileRoute: vi.fn((path: string) => (config: any) => ({
       ...config,
@@ -86,7 +88,7 @@ let mockNameField = {
     value: '',
     meta: {
       isBlurred: false,
-      errors: [],
+      errors: [] as string[],
     },
   },
   handleChange: vi.fn(),
@@ -97,7 +99,7 @@ let mockEmailField = {
     value: '',
     meta: {
       isBlurred: false,
-      errors: [],
+      errors: [] as string[],
     },
   },
   handleChange: vi.fn(),
@@ -108,7 +110,7 @@ let mockPasswordField = {
     value: '',
     meta: {
       isBlurred: false,
-      errors: [],
+      errors: [] as string[],
     },
   },
   handleChange: vi.fn(),
@@ -119,7 +121,7 @@ let mockConfirmPasswordField = {
     value: '',
     meta: {
       isBlurred: false,
-      errors: [],
+      errors: [] as string[],
     },
   },
   handleChange: vi.fn(),
@@ -165,7 +167,7 @@ vi.mock('@tanstack/react-form', () => ({
             value: '',
             meta: {
               isBlurred: false,
-              errors: [],
+              errors: [] as string[],
             },
           },
           handleChange: vi.fn(),
@@ -232,7 +234,7 @@ vi.mock('@khhub/shared', () => ({
 // Mock Button component
 vi.mock('@/components/ui/button', async () => {
   const React = await import('react');
-  
+
   return {
     Button: ({ children, variant, type, size, className, disabled, onClick, ...props }: any) => {
       return React.createElement('button', {
@@ -410,7 +412,7 @@ describe('SignUpPage', () => {
       handleBlur: vi.fn(),
     };
     mockGetFieldValue.mockReturnValue('');
-    
+
     (globalThis as any).__mockT__.mockImplementation((key: string, options?: any) => {
       const translations: Record<string, string | ((opts?: any) => string)> = {
         'auth.signUp.title': 'Sign Up',
@@ -442,14 +444,14 @@ describe('SignUpPage', () => {
 
   it('should render the component', () => {
     render(<route.component />);
-    
+
     const signUpTexts = screen.getAllByText('Sign Up');
     expect(signUpTexts.length).toBeGreaterThan(0);
   });
 
   it('should render card with title', () => {
     render(<route.component />);
-    
+
     const signUpTexts = screen.getAllByText('Sign Up');
     const title = signUpTexts.find(t => t.tagName === 'H3');
     expect(title).toBeDefined();
@@ -458,16 +460,16 @@ describe('SignUpPage', () => {
 
   it('should render card with description', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('Create your account')).toBeDefined();
   });
 
   it('should render name input field', () => {
     render(<route.component />);
-    
+
     const nameLabel = screen.getByText('Name');
     expect(nameLabel).toBeDefined();
-    
+
     const nameInput = screen.getByLabelText('Name');
     expect(nameInput).toBeDefined();
     expect(nameInput).toHaveProperty('type', 'text');
@@ -475,10 +477,10 @@ describe('SignUpPage', () => {
 
   it('should render email input field', () => {
     render(<route.component />);
-    
+
     const emailLabel = screen.getByText('Email');
     expect(emailLabel).toBeDefined();
-    
+
     const emailInput = screen.getByLabelText('Email');
     expect(emailInput).toBeDefined();
     expect(emailInput).toHaveProperty('type', 'email');
@@ -486,10 +488,10 @@ describe('SignUpPage', () => {
 
   it('should render password input field', () => {
     render(<route.component />);
-    
+
     const passwordLabel = screen.getByText('Password');
     expect(passwordLabel).toBeDefined();
-    
+
     const passwordInput = screen.getByLabelText('Password');
     expect(passwordInput).toBeDefined();
     expect(passwordInput).toHaveProperty('type', 'password');
@@ -497,10 +499,10 @@ describe('SignUpPage', () => {
 
   it('should render confirm password input field', () => {
     render(<route.component />);
-    
+
     const confirmPasswordLabel = screen.getByText('Confirm Password');
     expect(confirmPasswordLabel).toBeDefined();
-    
+
     const confirmPasswordInput = screen.getByLabelText('Confirm Password');
     expect(confirmPasswordInput).toBeDefined();
     expect(confirmPasswordInput).toHaveProperty('type', 'password');
@@ -508,28 +510,28 @@ describe('SignUpPage', () => {
 
   it('should render name input with placeholder', () => {
     render(<route.component />);
-    
+
     const nameInput = screen.getByPlaceholderText('John Doe');
     expect(nameInput).toBeDefined();
   });
 
   it('should render email input with placeholder', () => {
     render(<route.component />);
-    
+
     const emailInput = screen.getByPlaceholderText('name@example.com');
     expect(emailInput).toBeDefined();
   });
 
   it('should render password inputs with placeholders', () => {
     render(<route.component />);
-    
+
     const placeholders = screen.getAllByPlaceholderText('••••••••');
     expect(placeholders.length).toBe(2);
   });
 
   it('should render submit button', () => {
     render(<route.component />);
-    
+
     const signUpTexts = screen.getAllByText('Sign Up');
     const submitButton = signUpTexts.find(btn => btn.closest('[data-testid="button"]'));
     expect(submitButton).toBeDefined();
@@ -538,7 +540,7 @@ describe('SignUpPage', () => {
 
   it('should render sign in link', () => {
     render(<route.component />);
-    
+
     const signInLink = screen.getByText('Sign in');
     expect(signInLink).toBeDefined();
     expect(signInLink.closest('[data-testid="link"]')).toBeDefined();
@@ -546,33 +548,33 @@ describe('SignUpPage', () => {
 
   it('should render sign in link with correct href', () => {
     render(<route.component />);
-    
+
     const signInLink = screen.getByText('Sign in').closest('[data-testid="link"]');
     expect(signInLink?.getAttribute('href')).toBe('/auth/signin');
   });
 
   it('should render has account text', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('Already have an account?')).toBeDefined();
   });
 
   it('should call signUp.email with correct params when onSubmit is called', async () => {
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       await mockOnSubmit({
         value: {
           name: 'John Doe',
           email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          password: TEST_PASSWORD,
+          confirmPassword: TEST_PASSWORD,
         },
       });
-      
+
       expect((globalThis as any).__mockSignUpEmail__).toHaveBeenCalledWith({
         email: 'test@example.com',
-        password: 'password123',
+        password: TEST_PASSWORD,
         name: 'John Doe',
       });
     }
@@ -580,19 +582,19 @@ describe('SignUpPage', () => {
 
   it('should set signUpSuccess and userEmail on successful sign up', async () => {
     (globalThis as any).__mockSignUpEmail__.mockResolvedValue({ error: null });
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       await mockOnSubmit({
         value: {
           name: 'John Doe',
           email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          password: TEST_PASSWORD,
+          confirmPassword: TEST_PASSWORD,
         },
       });
-      
+
       expect((globalThis as any).__mockSignUpEmail__).toHaveBeenCalled();
     }
   });
@@ -603,28 +605,28 @@ describe('SignUpPage', () => {
         message: 'Email already exists',
       },
     });
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       await mockOnSubmit({
         value: {
           name: 'John Doe',
           email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          password: TEST_PASSWORD,
+          confirmPassword: TEST_PASSWORD,
         },
       });
-      
+
       expect((globalThis as any).__mockSignUpEmail__).toHaveBeenCalled();
     }
   });
 
   it('should handle error when signUp.email throws', async () => {
     (globalThis as any).__mockSignUpEmail__.mockRejectedValue(new Error('Network error'));
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       try {
         await mockOnSubmit({
@@ -638,14 +640,14 @@ describe('SignUpPage', () => {
       } catch {
         // Error is handled in component
       }
-      
+
       expect((globalThis as any).__mockSignUpEmail__).toHaveBeenCalled();
     }
   });
 
   it('should clear serverError and resendSuccess at start of onSubmit', async () => {
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       // First call with error
       (globalThis as any).__mockSignUpEmail__.mockResolvedValueOnce({
@@ -655,11 +657,11 @@ describe('SignUpPage', () => {
         value: {
           name: 'John Doe',
           email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          password: TEST_PASSWORD,
+          confirmPassword: TEST_PASSWORD,
         },
       });
-      
+
       // Second call should clear previous errors
       (globalThis as any).__mockSignUpEmail__.mockResolvedValueOnce({ error: null });
       await mockOnSubmit({
@@ -670,14 +672,14 @@ describe('SignUpPage', () => {
           confirmPassword: 'password456',
         },
       });
-      
+
       // Both calls should have been made
       expect((globalThis as any).__mockSignUpEmail__).toHaveBeenCalledTimes(2);
     }
   });
 
   it('should show form validation error when confirmPassword does not match', () => {
-    mockGetFieldValue.mockReturnValue('password123');
+    mockGetFieldValue.mockReturnValue(TEST_PASSWORD);
     mockConfirmPasswordField = {
       state: {
         value: 'different',
@@ -689,9 +691,9 @@ describe('SignUpPage', () => {
       handleChange: vi.fn(),
       handleBlur: vi.fn(),
     };
-    
+
     render(<route.component />);
-    
+
     const errorMessages = screen.getAllByTestId('form-message');
     const confirmPasswordError = errorMessages.find(msg => msg.textContent === 'Passwords do not match');
     expect(confirmPasswordError).toBeDefined();
@@ -699,9 +701,9 @@ describe('SignUpPage', () => {
 
   it('should disable inputs when form is submitting', () => {
     mockFormState = { isSubmitting: true };
-    
+
     render(<route.component />);
-    
+
     const inputs = screen.getAllByTestId('input');
     inputs.forEach((input) => {
       expect(input).toHaveProperty('disabled', true);
@@ -710,9 +712,9 @@ describe('SignUpPage', () => {
 
   it('should disable submit button when form is submitting', () => {
     mockFormState = { isSubmitting: true };
-    
+
     render(<route.component />);
-    
+
     const submitButton = screen.getByText('Signing up...');
     expect(submitButton).toBeDefined();
     expect(submitButton.closest('[data-testid="button"]')?.hasAttribute('disabled')).toBe(true);
@@ -720,41 +722,41 @@ describe('SignUpPage', () => {
 
   it('should show submitting text when form is submitting', () => {
     mockFormState = { isSubmitting: true };
-    
+
     render(<route.component />);
-    
+
     expect(screen.getByText('Signing up...')).toBeDefined();
   });
 
   it('should call field handleChange when input value changes', async () => {
     const { userEvent } = await import('@testing-library/user-event');
     const user = userEvent.setup();
-    
+
     render(<route.component />);
-    
-    const nameInput = screen.getByLabelText('Name') as HTMLInputElement;
+
+    const nameInput = screen.getByLabelText('Name');
     await user.type(nameInput, 'John Doe');
-    
+
     expect(mockNameField.handleChange).toHaveBeenCalled();
   });
 
   it('should call field handleBlur when input loses focus', async () => {
     const { userEvent } = await import('@testing-library/user-event');
     const user = userEvent.setup();
-    
+
     render(<route.component />);
-    
+
     const nameInput = screen.getByLabelText('Name');
     await user.click(nameInput);
     await user.tab();
-    
+
     expect(mockNameField.handleBlur).toHaveBeenCalled();
   });
 
   it('should call form handleSubmit when form is submitted', async () => {
     const { userEvent } = await import('@testing-library/user-event');
     const user = userEvent.setup();
-    
+
     mockFormHandleSubmit.mockImplementation(async () => {
       if (mockOnSubmit) {
         await mockOnSubmit({
@@ -767,9 +769,9 @@ describe('SignUpPage', () => {
         });
       }
     });
-    
+
     render(<route.component />);
-    
+
     const signUpTexts = screen.getAllByText('Sign Up');
     const submitButton = signUpTexts.find(btn => btn.closest('[data-testid="button"]'));
     expect(submitButton).toBeDefined();
@@ -783,7 +785,7 @@ describe('SignUpPage', () => {
     // We can't easily mock useState, so we'll test the component structure
     // by checking that the form renders correctly initially
     render(<route.component />);
-    
+
     // Initially, success state should not be shown
     expect(screen.queryByText('Account Created')).toBeNull();
     const signUpTexts = screen.getAllByText('Sign Up');
@@ -792,7 +794,7 @@ describe('SignUpPage', () => {
 
   it('should call translation function for all text keys', () => {
     render(<route.component />);
-    
+
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('auth.signUp.title');
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('auth.signUp.description');
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('auth.signUp.name');
@@ -806,17 +808,19 @@ describe('SignUpPage', () => {
 
   it('should render form with correct structure', () => {
     render(<route.component />);
-    
+
     const form = screen.getByTestId('form');
     expect(form).toBeDefined();
-    
-    const card = form.closest('[data-testid="card"]');
+
+    // AuthCard (Card) is now inside Form
+    const card = screen.getByTestId('card');
     expect(card).toBeDefined();
+    expect(form.contains(card)).toBe(true);
   });
 
   it('should render card with backdrop blur styling', () => {
     const { container } = render(<route.component />);
-    
+
     const card = container.querySelector('[data-testid="card"]');
     expect(card?.className).toContain('backdrop-blur-sm');
   });
@@ -825,19 +829,19 @@ describe('SignUpPage', () => {
     (globalThis as any).__mockSignUpEmail__.mockResolvedValue({
       error: {},
     });
-    
+
     render(<route.component />);
-    
+
     if (mockOnSubmit) {
       await mockOnSubmit({
         value: {
           name: 'John Doe',
           email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          password: TEST_PASSWORD,
+          confirmPassword: TEST_PASSWORD,
         },
       });
-      
+
       expect((globalThis as any).__mockSignUpEmail__).toHaveBeenCalled();
     }
   });
@@ -846,7 +850,7 @@ describe('SignUpPage', () => {
     // We can't easily mock useState, so we verify the component structure
     // The resend functionality is tested through the component's behavior
     render(<route.component />);
-    
+
     // Initially, success state should not be shown
     expect(screen.queryByText('Resend verification email')).toBeNull();
   });

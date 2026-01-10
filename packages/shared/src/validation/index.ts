@@ -1,4 +1,4 @@
-import { z, ZodError, ZodSchema } from 'zod';
+import { ZodError, ZodType } from 'zod';
 
 // Re-export all schemas from types
 export {
@@ -79,7 +79,7 @@ function formatZodErrors(error: ZodError): ValidationError[] {
 /**
  * Validate input against a Zod schema
  */
-export function validate<T>(schema: ZodSchema<T>, input: unknown): ValidationResult<T> {
+export function validate<T>(schema: ZodType<T>, input: unknown): ValidationResult<T> {
   const result = schema.safeParse(input);
 
   if (result.success) {
@@ -95,14 +95,14 @@ export function validate<T>(schema: ZodSchema<T>, input: unknown): ValidationRes
 /**
  * Parse and validate input, throwing on error
  */
-export function parse<T>(schema: ZodSchema<T>, input: unknown): T {
+export function parse<T>(schema: ZodType<T>, input: unknown): T {
   return schema.parse(input);
 }
 
 /**
  * Safe parse input, returning null on error
  */
-export function safeParse<T>(schema: ZodSchema<T>, input: unknown): T | null {
+export function safeParse<T>(schema: ZodType<T>, input: unknown): T | null {
   const result = schema.safeParse(input);
   return result.success ? result.data : null;
 }
@@ -123,7 +123,7 @@ export function getErrorMessages(errors: ValidationError[]): Record<string, stri
  */
 export function formatApiErrors(errors: ValidationError[]): { error: string; details: Record<string, string[]> } {
   const details: Record<string, string[]> = {};
-  
+
   for (const error of errors) {
     const key = error.path || 'general';
     if (!details[key]) {
@@ -139,5 +139,4 @@ export function formatApiErrors(errors: ValidationError[]): { error: string; det
 }
 
 // Re-export Zod for custom schemas
-export { z, ZodError, type ZodSchema };
-
+export { z, ZodError, type ZodType } from 'zod';

@@ -84,13 +84,15 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       const { name, status } = c.req.valid('json');
 
       const db = createDb(c.env.DB);
+      const updateData: any = {
+        updatedAt: sql`datetime('now')`,
+      };
+      if (name) updateData.name = name;
+      if (status) updateData.status = status;
+
       const [tenant] = await db
         .update(tenants)
-        .set({
-          ...(name && { name }),
-          ...(status && { status: status as 'active' | 'inactive' | 'suspended' }),
-          updatedAt: sql`datetime('now')`,
-        })
+        .set(updateData)
         .where(eq(tenants.id, id))
         .returning();
 
@@ -178,7 +180,7 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
         .values({
           tenantId,
           name,
-          dbType: db_type as 'postgresql' | 'mysql' | 'sqlite' | 'd1',
+          dbType: db_type,
           connectionString: connection_string,
           isPrimary: is_primary || false,
         })
@@ -219,7 +221,7 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
           ...(name && { name }),
           ...(connection_string && { connectionString: connection_string }),
           ...(is_primary !== undefined && { isPrimary: is_primary }),
-          ...(status && { status: status as 'active' | 'inactive' | 'error' }),
+          ...(status && { status }),
           updatedAt: sql`datetime('now')`,
         })
         .where(eq(tenantConnections.id, connectionId))

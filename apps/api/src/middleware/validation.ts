@@ -1,6 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
-import { z, type ZodSchema } from 'zod';
-import type { Context } from 'hono';
+import { z, type ZodType } from 'zod';
 
 /**
  * Validation middleware for Hono API routes using Zod
@@ -9,16 +8,16 @@ import type { Context } from 'hono';
 /**
  * Format validation errors for consistent API responses
  */
-function formatErrors(errors: z.ZodIssue[]): { error: string; details: Record<string, string[]> } {
+function formatErrors(errors: z.core.$ZodIssue[]): { error: string; details: Record<string, string[]> } {
   const details: Record<string, string[]> = {};
 
-  for (const issue of errors) {
+  errors.forEach((issue) => {
     const path = issue.path.join('.') || 'general';
     if (!details[path]) {
       details[path] = [];
     }
     details[path].push(issue.message);
-  }
+  });
 
   return {
     error: 'Validation failed',
@@ -27,33 +26,36 @@ function formatErrors(errors: z.ZodIssue[]): { error: string; details: Record<st
 }
 
 /**
- * Custom error hook for validation failures
- */
-function errorHook(result: { success: boolean; error?: z.ZodError; data?: unknown }, c: Context) {
-  if (!result.success && result.error) {
-    return c.json(formatErrors(result.error.issues), 400);
-  }
-}
-
-/**
  * Validate JSON body
  */
-export function validateJson<T extends ZodSchema>(schema: T) {
-  return zValidator('json', schema, errorHook);
+export function validateJson<T extends ZodType>(schema: T) {
+  return zValidator('json', schema, (result, c) => {
+    if (!result.success && result.error) {
+      return c.json(formatErrors(result.error.issues), 400);
+    }
+  });
 }
 
 /**
  * Validate query parameters
  */
-export function validateQuery<T extends ZodSchema>(schema: T) {
-  return zValidator('query', schema, errorHook);
+export function validateQuery<T extends ZodType>(schema: T) {
+  return zValidator('query', schema, (result, c) => {
+    if (!result.success && result.error) {
+      return c.json(formatErrors(result.error.issues), 400);
+    }
+  });
 }
 
 /**
  * Validate URL parameters
  */
-export function validateParam<T extends ZodSchema>(schema: T) {
-  return zValidator('param', schema, errorHook);
+export function validateParam<T extends ZodType>(schema: T) {
+  return zValidator('param', schema, (result, c) => {
+    if (!result.success && result.error) {
+      return c.json(formatErrors(result.error.issues), 400);
+    }
+  });
 }
 
 /**

@@ -12,7 +12,7 @@ const languageToCountry: Record<LanguageCode, string> = {
   ca: 'es-ct', // Catalonia (uses es-ct for the Catalan flag)
 };
 
-function Flag({ code, className = '' }: { code: LanguageCode; className?: string }) {
+function Flag({ code, className = '' }: Readonly<{ code: LanguageCode; className?: string }>) {
   const countryCode = languageToCountry[code];
   return (
     <span
@@ -22,7 +22,7 @@ function Flag({ code, className = '' }: { code: LanguageCode; className?: string
   );
 }
 
-export function LanguageSwitcher({ variant = 'default' }: { variant?: 'default' | 'compact' }) {
+export function LanguageSwitcher({ variant = 'default' }: Readonly<{ variant?: 'default' | 'compact' }>) {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const currentLanguage = (i18n.language?.split('-')[0] as LanguageCode) || 'es';
@@ -49,6 +49,7 @@ export function LanguageSwitcher({ variant = 'default' }: { variant?: 'default' 
         {isOpen && (
           <>
             <div
+              aria-hidden="true"
               className="fixed inset-0 z-40"
               onClick={() => setIsOpen(false)}
             />
@@ -88,6 +89,7 @@ export function LanguageSwitcher({ variant = 'default' }: { variant?: 'default' 
       {isOpen && (
         <>
           <div
+            aria-hidden="true"
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />

@@ -9,7 +9,7 @@ import { UserStatusSchema, UserRoleSchema } from './common';
 // Base User (without sensitive data)
 export const UserSchema = z.object({
   id: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   name: z.string(),
   avatarUrl: z.string().nullable(),
   emailVerified: z.boolean(),
@@ -21,7 +21,7 @@ export type User = z.infer<typeof UserSchema>;
 
 // Create User
 export const CreateUserSchema = z.object({
-  email: z.string().email('validation.email.invalid'),
+  email: z.email('validation.email.invalid'),
   password: z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength'),
   name: z.string().min(2, 'validation.name.minLength').max(100, 'validation.name.maxLength'),
 });
@@ -30,7 +30,7 @@ export type CreateUserInput = z.infer<typeof CreateUserSchema>;
 // Update User (admin)
 export const UpdateUserSchema = z.object({
   name: z.string().min(2, 'validation.name.minLength').max(100, 'validation.name.maxLength').optional(),
-  avatar_url: z.string().url('validation.url.invalid').optional(),
+  avatar_url: z.url('validation.url.invalid').optional(),
   status: UserStatusSchema.optional(),
 });
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;

@@ -4,15 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
-import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
+import { zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { resetPassword } from '@/lib/auth-client';
+import { AuthCard } from '@/components/auth/auth-card';
+import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
+import { BaseAuthForm } from '@/components/auth/base-auth-form';
+import { BaseAuthField } from '@/components/auth/base-auth-field';
+import { ConfirmPasswordField } from '@/components/auth/confirm-password-field';
 
 // Schema for password field
-const PasswordSchema = z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength');
+const PasswordSchema = z.string()
+  .min(8, { message: 'validation.password.minLength' })
+  .max(128, { message: 'validation.password.maxLength' });
 
 // Schema for reset password with confirmation
 const ResetPasswordFormSchema = z.object({
@@ -76,135 +80,62 @@ function ResetPasswordPage() {
 
   if (success) {
     return (
-      <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
-            <CheckCircle className="h-6 w-6 text-green-500" />
-          </div>
-          <CardTitle className="text-2xl font-bold">{t('auth.resetPassword.success.title')}</CardTitle>
-          <CardDescription>
-            {t('auth.resetPassword.success.description')}
-          </CardDescription>
-        </CardHeader>
-        <CardFooter>
+      <AuthCard
+        title={t('auth.resetPassword.success.title')}
+        description={t('auth.resetPassword.success.description')}
+        footer={
           <Button className="w-full" onClick={() => navigate({ to: '/auth/signin' })}>
             {t('auth.resetPassword.success.signIn')}
           </Button>
-        </CardFooter>
-      </Card>
+        }
+      >
+        <div className="flex justify-center py-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+            <CheckCircle className="h-6 w-6 text-green-500" />
+          </div>
+        </div>
+      </AuthCard>
     );
   }
 
   if (!token) {
     return (
-      <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">{t('auth.resetPassword.invalidLink.title')}</CardTitle>
-          <CardDescription>
-            {t('auth.resetPassword.invalidLink.description')}
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="flex flex-col space-y-4">
-          <Button className="w-full" asChild>
-            <Link to="/auth/forgot-password">{t('auth.resetPassword.invalidLink.requestNew')}</Link>
-          </Button>
-          <Link
-            to="/auth/signin"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('auth.resetPassword.backToSignIn')}
-          </Link>
-        </CardFooter>
-      </Card>
+      <AuthCard
+        title={t('auth.resetPassword.invalidLink.title')}
+        description={t('auth.resetPassword.invalidLink.description')}
+        footer={
+          <div className="flex flex-col space-y-4">
+            <Button className="w-full" asChild>
+              <Link to="/auth/forgot-password">{t('auth.resetPassword.invalidLink.requestNew')}</Link>
+            </Button>
+            <Link
+              to="/auth/signin"
+              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('auth.resetPassword.backToSignIn')}
+            </Link>
+          </div>
+        }
+      >
+        <div />
+      </AuthCard>
     );
   }
 
   return (
-    <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">{t('auth.resetPassword.title')}</CardTitle>
-        <CardDescription>{t('auth.resetPassword.description')}</CardDescription>
-      </CardHeader>
-      <Form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-      >
-        <CardContent className="space-y-4">
-          {serverError && (
-            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-              {serverError}
-            </div>
-          )}
-
-          <form.Field
-            name="newPassword"
-            validators={{
-              onChange: zodFieldValidator(PasswordSchema),
-            }}
-          >
-            {(field) => (
-              <FormField field={field}>
-                <FormLabel htmlFor="newPassword">{t('auth.resetPassword.newPassword')}</FormLabel>
-                <FormControl>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    disabled={form.state.isSubmitting}
-                  />
-                </FormControl>
-                {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                  <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                )}
-              </FormField>
-            )}
-          </form.Field>
-
-          <form.Field
-            name="confirmPassword"
-            validators={{
-              onChange: ({ value, fieldApi }) => {
-                const password = fieldApi.form.getFieldValue('newPassword');
-                if (value && password && value !== password) {
-                  return 'validation.password.mismatch';
-                }
-                return undefined;
-              },
-            }}
-          >
-            {(field) => (
-              <FormField field={field}>
-                <FormLabel htmlFor="confirmPassword">{t('auth.resetPassword.confirmPassword')}</FormLabel>
-                <FormControl>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    disabled={form.state.isSubmitting}
-                  />
-                </FormControl>
-                {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                  <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                )}
-              </FormField>
-            )}
-          </form.Field>
-        </CardContent>
-
-        <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
-            {form.state.isSubmitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
-          </Button>
+    <BaseAuthForm
+      form={form}
+      title={t('auth.resetPassword.title')}
+      description={t('auth.resetPassword.description')}
+      serverError={serverError}
+      footer={
+        <div className="flex flex-col space-y-4">
+          <AuthFormSubmit
+            isSubmitting={form.state.isSubmitting}
+            labelKey="auth.resetPassword.submit"
+            submittingLabelKey="auth.resetPassword.submitting"
+          />
           <Link
             to="/auth/signin"
             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
@@ -212,8 +143,25 @@ function ResetPasswordPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('auth.resetPassword.backToSignIn')}
           </Link>
-        </CardFooter>
-      </Form>
-    </Card>
+        </div>
+      }
+    >
+      <BaseAuthField
+        Field={form.Field}
+        name="newPassword"
+        label={t('auth.resetPassword.newPassword')}
+        type="password"
+        placeholder="••••••••"
+        validator={zodFieldValidator(PasswordSchema)}
+        disabled={form.state.isSubmitting}
+      />
+
+      <ConfirmPasswordField
+        Field={form.Field}
+        passwordFieldName="newPassword"
+        label={t('auth.resetPassword.confirmPassword')}
+        disabled={form.state.isSubmitting}
+      />
+    </BaseAuthForm>
   );
 }

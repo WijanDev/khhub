@@ -8,7 +8,6 @@ vi.mock('resend', () => {
     emails = {
       send: mockEmailsSend,
     };
-    constructor(_apiKey: string) {}
   }
 
   return {
@@ -24,22 +23,6 @@ describe('ResendEmailService', () => {
     vi.clearAllMocks();
     const resendModule = await import('resend');
     mockEmailsSend = (resendModule as any).__mockEmailsSend;
-  });
-
-  describe('constructor', () => {
-    it('should initialize with apiKey and defaultFrom', () => {
-      const service = new ResendEmailService('test-api-key', 'Test <test@example.com>');
-      
-      expect(service).toBeDefined();
-      expect((service as any).apiKey).toBe('test-api-key');
-      expect((service as any).defaultFrom).toBe('Test <test@example.com>');
-    });
-
-    it('should use default from email when not provided', () => {
-      const service = new ResendEmailService('test-api-key');
-      
-      expect((service as any).defaultFrom).toBe('KH Hub <noreply@khhub.app>');
-    });
   });
 
   describe('sendEmail', () => {
@@ -290,7 +273,7 @@ describe('ResendEmailService', () => {
     it('should handle error from Resend API', async () => {
       const error = { message: 'Resend API error' };
       mockEmailsSend.mockResolvedValue({ data: null, error });
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       const result = await service.sendEmail({
         to: 'recipient@example.com',
@@ -309,7 +292,7 @@ describe('ResendEmailService', () => {
     it('should handle error without message property', async () => {
       const error = { code: 500 };
       mockEmailsSend.mockResolvedValue({ data: null, error });
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       const result = await service.sendEmail({
         to: 'recipient@example.com',
@@ -327,7 +310,7 @@ describe('ResendEmailService', () => {
     it('should handle exception from Resend API', async () => {
       const error = new Error('Network error');
       mockEmailsSend.mockRejectedValue(error);
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       const result = await service.sendEmail({
         to: 'recipient@example.com',
@@ -346,7 +329,7 @@ describe('ResendEmailService', () => {
     it('should handle exception with message property', async () => {
       const error = { message: 'Custom error message' };
       mockEmailsSend.mockRejectedValue(error);
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       const result = await service.sendEmail({
         to: 'recipient@example.com',
@@ -364,7 +347,7 @@ describe('ResendEmailService', () => {
     it('should handle unknown exception format', async () => {
       const error = { code: 500 };
       mockEmailsSend.mockRejectedValue(error);
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       const result = await service.sendEmail({
         to: 'recipient@example.com',

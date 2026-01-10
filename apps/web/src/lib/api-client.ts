@@ -4,34 +4,34 @@ import type { ApiType } from '@khhub/api';
 // Get the API base URL based on environment
 export function getApiBaseUrl(): string {
   // Check for explicit API URL in environment variables (works in both client and server)
-  const apiUrl = 
-    (typeof window !== 'undefined' 
-      ? (import.meta.env as { VITE_API_URL?: string }).VITE_API_URL
-      : process.env.VITE_API_URL || process.env.API_URL);
-  
+  const apiUrl =
+    (globalThis.window === undefined
+      ? process.env.VITE_API_URL || process.env.API_URL
+      : (import.meta.env as { VITE_API_URL?: string }).VITE_API_URL);
+
   if (apiUrl) {
     return apiUrl;
   }
 
-  if (typeof window !== 'undefined') {
+  if (globalThis.window !== undefined) {
     // Client-side: use localhost in development, subdomain in production
-    if (window.location.hostname === 'localhost') {
+    if (globalThis.window.location.hostname === 'localhost') {
       return 'http://localhost:8787';
     }
     // Production: use api subdomain
-    return `https://api.${window.location.hostname.replace('www.', '')}`;
+    return `https://api.${globalThis.window.location.hostname.replace('www.', '')}`;
   }
 
   // Server-side (SSR): detect development mode
   // In development, use localhost; in production, use subdomain
-  const isDevelopment = process.env.NODE_ENV === 'development' || 
-                        process.env.ENVIRONMENT === 'development' ||
-                        !process.env.ENVIRONMENT;
-  
+  const isDevelopment = process.env.NODE_ENV === 'development' ||
+    process.env.ENVIRONMENT === 'development' ||
+    !process.env.ENVIRONMENT;
+
   if (isDevelopment) {
     return 'http://localhost:8787';
   }
-  
+
   // Production default
   return 'https://api.khhub.app';
 }

@@ -114,8 +114,7 @@ vi.mock('react-i18next', () => ({
 
 // Mock TanStack Router
 vi.mock('@tanstack/react-router', async () => {
-  const React = await import('react');
-  
+
   return {
     createFileRoute: vi.fn((path: string) => (config: any) => {
       const routeConfig = {
@@ -151,9 +150,11 @@ vi.mock('@/lib/router-utils', () => ({
 
 // Mock api-client
 vi.mock('@/lib/api-client', () => ({
-  usersApi: {
-    'cache/purge': {
-      $post: () => (globalThis as any).__mockUsersApiCachePurge__(),
+  api: {
+    cache: {
+      purge: {
+        $post: () => (globalThis as any).__mockUsersApiCachePurge__(),
+      },
     },
   },
 }));
@@ -190,7 +191,7 @@ vi.mock('@/components/ui/card', () => ({
 // Mock Button component
 vi.mock('@/components/ui/button', async () => {
   const React = await import('react');
-  
+
   return {
     Button: ({ children, variant, size, onClick, disabled, title, className, ...props }: any) => {
       return React.createElement('button', {
@@ -232,8 +233,8 @@ vi.mock('lucide-react', () => ({
 }));
 
 // Mock global confirm and alert
-global.confirm = mockConfirm;
-global.alert = mockAlert;
+globalThis.confirm = mockConfirm;
+globalThis.alert = mockAlert;
 
 // Import after mocks are set up
 import { Route } from '../users';
@@ -269,17 +270,17 @@ describe('Route', () => {
   it('should prefetch users in loader when queryClient exists', async () => {
     const context = { queryClient: mockQueryClient };
     await route.loader({ context });
-    
+
     expect((globalThis as any).__mockGetQueryClientFromContext__).toHaveBeenCalledWith(context);
     expect((globalThis as any).__mockPrefetchUsers__).toHaveBeenCalledWith(mockQueryClient);
   });
 
   it('should handle loader when queryClient is null', async () => {
     (globalThis as any).__mockGetQueryClientFromContext__.mockReturnValue(null);
-    
+
     const context = {};
     await route.loader({ context });
-    
+
     expect((globalThis as any).__mockGetQueryClientFromContext__).toHaveBeenCalledWith(context);
     expect((globalThis as any).__mockPrefetchUsers__).not.toHaveBeenCalled();
   });
@@ -294,7 +295,7 @@ describe('UsersPage', () => {
     (globalThis as any).__mockDeleteUserMutation__.mutateAsync.mockResolvedValue(undefined);
     (globalThis as any).__mockConfirm__.mockReturnValue(true);
     (globalThis as any).__mockUsersApiCachePurge__.mockResolvedValue({ ok: true });
-    
+
     (globalThis as any).__mockT__.mockImplementation((key: string, options?: any) => {
       const translations: Record<string, string> = {
         'app.users.title': 'Users',
@@ -325,20 +326,20 @@ describe('UsersPage', () => {
 
   it('should render the component', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('Users')).toBeDefined();
   });
 
   it('should render header with title and description', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('Users')).toBeDefined();
     expect(screen.getByText('Manage users')).toBeDefined();
   });
 
   it('should render refresh button', () => {
     render(<route.component />);
-    
+
     const refreshButtons = screen.getAllByTestId('button');
     const refreshButton = refreshButtons.find((btn) => btn.getAttribute('title') === 'Refresh');
     expect(refreshButton).toBeDefined();
@@ -347,7 +348,7 @@ describe('UsersPage', () => {
 
   it('should render purge cache button', () => {
     render(<route.component />);
-    
+
     const buttons = screen.getAllByTestId('button');
     const purgeButton = buttons.find((btn) => btn.getAttribute('title') === 'Purge Cache');
     expect(purgeButton).toBeDefined();
@@ -356,7 +357,7 @@ describe('UsersPage', () => {
 
   it('should render invite button', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('Invite User')).toBeDefined();
     expect(screen.getByText('Invite User').querySelector('[data-testid="icon-plus"]')).toBeDefined();
   });
@@ -364,12 +365,12 @@ describe('UsersPage', () => {
   it('should call invalidateQueries when refresh button is clicked', async () => {
     const user = userEvent.setup();
     render(<route.component />);
-    
+
     const refreshButtons = screen.getAllByTestId('button');
     const refreshButton = refreshButtons.find((btn) => btn.getAttribute('title') === 'Refresh');
-    
+
     await user.click(refreshButton!);
-    
+
     expect((globalThis as any).__mockQueryClient__.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['users', 'list'],
     });
@@ -377,7 +378,7 @@ describe('UsersPage', () => {
 
   it('should render users table when users exist', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('All Users')).toBeDefined();
     expect(screen.getByText(/Manage all users/)).toBeDefined();
     expect(screen.getByText('John Doe')).toBeDefined();
@@ -387,7 +388,7 @@ describe('UsersPage', () => {
 
   it('should render user emails', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('john@example.com')).toBeDefined();
     expect(screen.getByText('jane@example.com')).toBeDefined();
     expect(screen.getByText('bob@example.com')).toBeDefined();
@@ -395,10 +396,10 @@ describe('UsersPage', () => {
 
   it('should render user avatars with first letter when image is null', () => {
     const { container } = render(<route.component />);
-    
-    const avatars = container.querySelectorAll('.rounded-full.bg-primary\\/10');
+
+    const avatars = container.querySelectorAll(String.raw`.rounded-full.bg-primary\/10`);
     expect(avatars.length).toBeGreaterThanOrEqual(2); // At least 2 users without images
-    
+
     // Check that avatars show first letter
     const johnAvatar = Array.from(avatars).find((avatar) => avatar.textContent === 'J');
     expect(johnAvatar).toBeDefined();
@@ -406,10 +407,10 @@ describe('UsersPage', () => {
 
   it('should render user avatars with image when image is provided', () => {
     const { container } = render(<route.component />);
-    
+
     const images = container.querySelectorAll('img.rounded-full');
     expect(images.length).toBeGreaterThanOrEqual(1); // At least Jane has an image
-    
+
     const janeImage = Array.from(images).find((img) => (img as HTMLImageElement).alt === 'Jane Smith');
     expect(janeImage).toBeDefined();
     expect((janeImage as HTMLImageElement).src).toBe('https://example.com/avatar.jpg');
@@ -417,7 +418,7 @@ describe('UsersPage', () => {
 
   it('should render email verification checkbox for verified users', () => {
     render(<route.component />);
-    
+
     const checkboxes = screen.getAllByTestId('checkbox');
     const verifiedCheckboxes = checkboxes.filter((cb) => (cb as HTMLInputElement).checked);
     expect(verifiedCheckboxes.length).toBeGreaterThanOrEqual(2); // John and Bob are verified
@@ -425,7 +426,7 @@ describe('UsersPage', () => {
 
   it('should render email verification checkbox as unchecked for unverified users', () => {
     render(<route.component />);
-    
+
     const checkboxes = screen.getAllByTestId('checkbox');
     const unverifiedCheckboxes = checkboxes.filter((cb) => !(cb as HTMLInputElement).checked);
     expect(unverifiedCheckboxes.length).toBeGreaterThanOrEqual(1); // Jane is not verified
@@ -433,17 +434,17 @@ describe('UsersPage', () => {
 
   it('should render verification status text', () => {
     render(<route.component />);
-    
+
     const verifiedTexts = screen.getAllByText('Verified');
     expect(verifiedTexts.length).toBeGreaterThanOrEqual(2); // At least 2 verified users
-    
+
     const notVerifiedTexts = screen.getAllByText('Not Verified');
     expect(notVerifiedTexts.length).toBeGreaterThanOrEqual(1); // At least 1 unverified user
   });
 
   it('should render user roles', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText('admin')).toBeDefined();
     const userRoles = screen.getAllByText('user');
     expect(userRoles.length).toBeGreaterThanOrEqual(2); // At least 2 users with 'user' role
@@ -451,16 +452,16 @@ describe('UsersPage', () => {
 
   it('should render user status badges', () => {
     render(<route.component />);
-    
+
     const activeStatuses = screen.getAllByText('active');
     expect(activeStatuses.length).toBeGreaterThanOrEqual(2); // At least 2 active users
-    
+
     expect(screen.getByText('banned')).toBeDefined();
   });
 
   it('should render delete button for each user', () => {
     render(<route.component />);
-    
+
     const deleteButtons = screen.getAllByTestId('icon-trash2');
     expect(deleteButtons.length).toBe(3);
   });
@@ -468,12 +469,12 @@ describe('UsersPage', () => {
   it('should call confirm and deleteUserMutation when delete button is clicked', async () => {
     const user = userEvent.setup();
     render(<route.component />);
-    
+
     const deleteButtons = screen.getAllByTestId('icon-trash2');
     const firstDeleteButton = deleteButtons[0].closest('button');
-    
+
     await user.click(firstDeleteButton!);
-    
+
     expect((globalThis as any).__mockConfirm__).toHaveBeenCalledWith(
       expect.stringContaining('John Doe')
     );
@@ -483,14 +484,14 @@ describe('UsersPage', () => {
   it('should not delete user when confirm returns false', async () => {
     const user = userEvent.setup();
     (globalThis as any).__mockConfirm__.mockReturnValue(false);
-    
+
     render(<route.component />);
-    
+
     const deleteButtons = screen.getAllByTestId('icon-trash2');
     const firstDeleteButton = deleteButtons[0].closest('button');
-    
+
     await user.click(firstDeleteButton!);
-    
+
     expect((globalThis as any).__mockConfirm__).toHaveBeenCalled();
     expect((globalThis as any).__mockDeleteUserMutation__.mutateAsync).not.toHaveBeenCalled();
   });
@@ -498,34 +499,34 @@ describe('UsersPage', () => {
   it('should show loading spinner when deleting user', async () => {
     const user = userEvent.setup();
     render(<route.component />);
-    
+
     const deleteButtons = screen.getAllByTestId('icon-trash2');
     const firstDeleteButton = deleteButtons[0].closest('button');
-    
+
     // Start deletion
     const clickPromise = user.click(firstDeleteButton!);
-    
+
     // Wait for state update
     await waitFor(() => {
       const buttons = screen.getAllByTestId('button');
       const deleteButton = buttons.find((btn) => btn.querySelector('[data-testid="icon-refresh-cw"]'));
       expect(deleteButton).toBeDefined();
     });
-    
+
     await clickPromise;
   });
 
   it('should show alert on delete error', async () => {
     const user = userEvent.setup();
     (globalThis as any).__mockDeleteUserMutation__.mutateAsync.mockRejectedValue(new Error('Delete failed'));
-    
+
     render(<route.component />);
-    
+
     const deleteButtons = screen.getAllByTestId('icon-trash2');
     const firstDeleteButton = deleteButtons[0].closest('button');
-    
+
     await user.click(firstDeleteButton!);
-    
+
     await waitFor(() => {
       expect((globalThis as any).__mockAlert__).toHaveBeenCalledWith('Failed to delete user. Please try again.');
     });
@@ -534,12 +535,12 @@ describe('UsersPage', () => {
   it('should call purge cache API when purge cache button is clicked', async () => {
     const user = userEvent.setup();
     render(<route.component />);
-    
+
     const buttons = screen.getAllByTestId('button');
     const purgeButton = buttons.find((btn) => btn.getAttribute('title') === 'Purge Cache');
-    
+
     await user.click(purgeButton!);
-    
+
     expect((globalThis as any).__mockConfirm__).toHaveBeenCalledWith('Are you sure you want to purge the cache?');
     expect((globalThis as any).__mockUsersApiCachePurge__).toHaveBeenCalled();
   });
@@ -547,12 +548,12 @@ describe('UsersPage', () => {
   it('should invalidate queries after successful cache purge', async () => {
     const user = userEvent.setup();
     render(<route.component />);
-    
+
     const buttons = screen.getAllByTestId('button');
     const purgeButton = buttons.find((btn) => btn.getAttribute('title') === 'Purge Cache');
-    
+
     await user.click(purgeButton!);
-    
+
     await waitFor(() => {
       expect((globalThis as any).__mockQueryClient__.invalidateQueries).toHaveBeenCalledWith({
         queryKey: ['users', 'list'],
@@ -564,14 +565,14 @@ describe('UsersPage', () => {
   it('should show alert on purge cache error', async () => {
     const user = userEvent.setup();
     (globalThis as any).__mockUsersApiCachePurge__.mockResolvedValue({ ok: false });
-    
+
     render(<route.component />);
-    
+
     const buttons = screen.getAllByTestId('button');
     const purgeButton = buttons.find((btn) => btn.getAttribute('title') === 'Purge Cache');
-    
+
     await user.click(purgeButton!);
-    
+
     await waitFor(() => {
       expect((globalThis as any).__mockAlert__).toHaveBeenCalledWith('Failed to purge cache');
     });
@@ -580,34 +581,36 @@ describe('UsersPage', () => {
   it('should not purge cache when confirm returns false', async () => {
     const user = userEvent.setup();
     (globalThis as any).__mockConfirm__.mockReturnValue(false);
-    
+
     render(<route.component />);
-    
+
     const buttons = screen.getAllByTestId('button');
     const purgeButton = buttons.find((btn) => btn.getAttribute('title') === 'Purge Cache');
-    
+
     await user.click(purgeButton!);
-    
+
     expect((globalThis as any).__mockConfirm__).toHaveBeenCalled();
     expect((globalThis as any).__mockUsersApiCachePurge__).not.toHaveBeenCalled();
   });
 
   it('should show loading spinner when purging cache', async () => {
     const user = userEvent.setup();
-    (globalThis as any).__mockUsersApiCachePurge__.mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ ok: true }), 100)));
-    
+    const timeout = (resolve: (value: unknown) => void) => setTimeout(() => resolve({ ok: true }), 100)
+    const mockImplementation = () => new Promise((resolve) => timeout(resolve));
+    (globalThis as any).__mockUsersApiCachePurge__.mockImplementation(mockImplementation);
+
     render(<route.component />);
-    
+
     const buttons = screen.getAllByTestId('button');
     const purgeButton = buttons.find((btn) => btn.getAttribute('title') === 'Purge Cache');
-    
+
     const clickPromise = user.click(purgeButton!);
-    
+
     await waitFor(() => {
       const spinner = purgeButton?.querySelector('[data-testid="icon-refresh-cw"]');
       expect(spinner).toBeDefined();
     });
-    
+
     await clickPromise;
   });
 
@@ -615,9 +618,9 @@ describe('UsersPage', () => {
     (globalThis as any).__mockUseUsersSuspense__.mockReturnValue({
       data: { users: [] },
     });
-    
+
     render(<route.component />);
-    
+
     expect(screen.getByText('No users found')).toBeDefined();
     expect(screen.getByText('Invite First User')).toBeDefined();
     expect(screen.getByTestId('icon-users')).toBeDefined();
@@ -625,14 +628,14 @@ describe('UsersPage', () => {
 
   it('should not render empty state when users exist', () => {
     render(<route.component />);
-    
+
     const emptyState = screen.queryByText('No users found');
     expect(emptyState).toBeNull();
   });
 
   it('should render user count in description', () => {
     render(<route.component />);
-    
+
     expect(screen.getByText(/Total: 3/)).toBeDefined();
   });
 
@@ -652,10 +655,10 @@ describe('UsersPage', () => {
         ],
       },
     });
-    
+
     const { container } = render(<route.component />);
-    
-    const avatars = container.querySelectorAll('.rounded-full.bg-primary\\/10');
+
+    const avatars = container.querySelectorAll(String.raw`.rounded-full.bg-primary\/10`);
     const avatarWithQuestionMark = Array.from(avatars).find((avatar) => avatar.textContent === '?');
     expect(avatarWithQuestionMark).toBeDefined();
   });
@@ -676,10 +679,10 @@ describe('UsersPage', () => {
         ],
       },
     });
-    
+
     const { container } = render(<route.component />);
-    
-    const avatars = container.querySelectorAll('.rounded-full.bg-primary\\/10');
+
+    const avatars = container.querySelectorAll(String.raw`.rounded-full.bg-primary\/10`);
     const avatarWithQuestionMark = Array.from(avatars).find((avatar) => avatar.textContent === '?');
     expect(avatarWithQuestionMark).toBeDefined();
   });
@@ -687,40 +690,42 @@ describe('UsersPage', () => {
   it('should disable delete button when deleting that user', async () => {
     const user = userEvent.setup();
     render(<route.component />);
-    
+
     const deleteButtons = screen.getAllByTestId('icon-trash2');
     const firstDeleteButton = deleteButtons[0].closest('button');
-    
+
     const clickPromise = user.click(firstDeleteButton!);
-    
+
     await waitFor(() => {
       expect(firstDeleteButton?.disabled).toBe(true);
     });
-    
+
     await clickPromise;
   });
 
   it('should disable purge cache button when purging', async () => {
     const user = userEvent.setup();
-    (globalThis as any).__mockUsersApiCachePurge__.mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ ok: true }), 100)));
-    
+    const timeout = (resolve: (value: unknown) => void) => setTimeout(() => resolve({ ok: true }), 100)
+    const mockImplementation = () => new Promise((resolve) => timeout(resolve));
+    (globalThis as any).__mockUsersApiCachePurge__.mockImplementation(mockImplementation);
+
     render(<route.component />);
-    
-    const buttons = screen.getAllByTestId('button');
-    const purgeButton = buttons.find((btn) => btn.getAttribute('title') === 'Purge Cache');
-    
-    const clickPromise = user.click(purgeButton!);
-    
+
+    const buttons = screen.getAllByRole('button');
+    const purgeButton = buttons.find((btn) => btn.getAttribute('title') === 'Purge Cache') as HTMLButtonElement;
+
+    const clickPromise = user.click(purgeButton);
+
     await waitFor(() => {
-      expect(purgeButton?.disabled).toBe(true);
+      expect(purgeButton.disabled).toBe(true);
     });
-    
+
     await clickPromise;
   });
 
   it('should call translation function for all text elements', () => {
     render(<route.component />);
-    
+
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('app.users.title');
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('app.users.description');
     expect((globalThis as any).__mockT__).toHaveBeenCalledWith('app.users.all');

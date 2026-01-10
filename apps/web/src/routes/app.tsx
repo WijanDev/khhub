@@ -66,6 +66,7 @@ function AppLayout() {
       {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
         <div
+          aria-hidden="true"
           className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -73,9 +74,8 @@ function AppLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-[73px] z-40 flex h-[calc(100vh-73px)] w-64 flex-col border-r border-border/40 bg-background/95 backdrop-blur-xl transition-transform duration-300 lg:relative lg:top-0 lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed left-0 top-[73px] z-40 flex h-[calc(100vh-73px)] w-64 flex-col border-r border-border/40 bg-background/95 backdrop-blur-xl transition-transform duration-300 lg:relative lg:top-0 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         {/* User info */}
         <div className="border-b border-border/40 p-4">

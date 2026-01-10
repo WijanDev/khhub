@@ -4,11 +4,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreHorizontal, RefreshCw, AlertCircle, Users, Trash2, Trash } from 'lucide-react';
+import { Plus, RefreshCw, Users, Trash2, Trash } from 'lucide-react';
 import { useUsersSuspense, prefetchUsers, userKeys, useDeleteUser } from '@/lib/queries/users';
 import { getQueryClientFromContext } from '@/lib/router-utils';
 import { Checkbox } from '@/components/ui/checkbox';
-import { usersApi } from '@/lib/api-client';
+import { api } from '@/lib/api-client';
 
 export const Route = createFileRoute('/app/users')({
   loader: async ({ context }) => {
@@ -54,7 +54,7 @@ function UsersPage() {
 
     setPurgingCache(true);
     try {
-      const response = await usersApi['cache/purge'].$post();
+      const response = await api.cache.purge.$post();
       if (!response.ok) {
         throw new Error('Failed to purge cache');
       }
@@ -164,11 +164,10 @@ function UsersPage() {
                       {user.role || 'user'}
                     </span>
                     <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        user.banned === true
-                          ? 'bg-red-500/10 text-red-500'
-                          : 'bg-green-500/10 text-green-500'
-                      }`}
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${user.banned === true
+                        ? 'bg-red-500/10 text-red-500'
+                        : 'bg-green-500/10 text-green-500'
+                        }`}
                     >
                       {user.banned === true ? 'banned' : 'active'}
                     </span>

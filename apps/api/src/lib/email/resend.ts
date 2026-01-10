@@ -3,18 +3,18 @@
  */
 
 import { Resend } from 'resend';
-import type { EmailService, SendEmailOptions, SendEmailResult } from './types';
+import type { SendEmailOptions, SendEmailResult } from './types';
+import { AbstractEmailService } from './base';
 
-export class ResendEmailService implements EmailService {
-  private apiKey: string;
-  private defaultFrom: string;
-  private client: Resend;
+export class ResendEmailService extends AbstractEmailService {
+  private readonly defaultFrom: string;
+  private readonly client: Resend;
 
   constructor(
     apiKey: string,
     defaultFrom: string = 'KH Hub <noreply@khhub.app>'
   ) {
-    this.apiKey = apiKey;
+    super();
     this.defaultFrom = defaultFrom;
     this.client = new Resend(apiKey);
   }
@@ -33,14 +33,8 @@ export class ResendEmailService implements EmailService {
       headers,
     } = options;
 
-    // Normalize recipients to arrays
-    const toArray = Array.isArray(to) ? to : [to];
-    const ccArray = cc ? (Array.isArray(cc) ? cc : [cc]) : undefined;
-    const bccArray = bcc ? (Array.isArray(bcc) ? bcc : [bcc]) : undefined;
-
     try {
       // Build email payload for Resend
-      // Resend supports: from, to, subject, html, text, cc, bcc, replyTo, headers
       const emailPayload: {
         from: string;
         to: string | string[];
@@ -53,7 +47,7 @@ export class ResendEmailService implements EmailService {
         headers?: Record<string, string>;
       } = {
         from,
-        to: toArray,
+        to: this.normalizeToRecipients(to),
         subject,
         html,
       };
@@ -62,10 +56,12 @@ export class ResendEmailService implements EmailService {
         emailPayload.text = text;
       }
 
+      const ccArray = this.normalizeRecipients(cc);
       if (ccArray) {
         emailPayload.cc = ccArray;
       }
 
+      const bccArray = this.normalizeRecipients(bcc);
       if (bccArray) {
         emailPayload.bcc = bccArray;
       }
@@ -104,22 +100,10 @@ export class ResendEmailService implements EmailService {
       };
     } catch (error: unknown) {
       console.error('Failed to send email with Resend:', error);
-      
-      let errorMessage = 'Unknown error';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        errorMessage = String(error.message);
-      }
-
       return {
         status: 'failed',
-        error: errorMessage,
+        error: this.getErrorMessage(error),
       };
     }
-  }
-
-  async sendSimpleEmail(to: string, subject: string, html: string, text?: string): Promise<SendEmailResult> {
-    return this.sendEmail({ to, subject, html, text });
   }
 }

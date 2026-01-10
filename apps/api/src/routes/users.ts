@@ -6,13 +6,13 @@ import { createCacheManager, CacheKeys, CacheTTL } from '../lib/cache';
 import { validateJson, validateParam, IdParamSchema, IdTenantParamSchema } from '../middleware/validation';
 import { AddUserToTenantSchema, UpdateUserRoleSchema } from '@khhub/shared';
 import { z } from 'zod';
-import { EmailTemplates } from '../lib/email';
 import { createEmailServiceFromEnv } from '../lib/email/service';
+import { EmailTemplates } from '../lib/email/templates';
 
 // User update schema (specific to this API)
 const UpdateUserApiSchema = z.object({
   name: z.string().min(2).max(100).optional(),
-  image: z.string().url().optional(),
+  image: z.url().optional(),
   role: z.enum(['user', 'admin']).optional(),
   banned: z.boolean().optional(),
 });
@@ -92,15 +92,17 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       const { name, image, role, banned } = c.req.valid('json');
 
       const db = createDb(c.env.DB);
+      const updateData: any = {
+        updatedAt: new Date(),
+      };
+      if (name) updateData.name = name;
+      if (image !== undefined) updateData.image = image;
+      if (role) updateData.role = role;
+      if (banned !== undefined) updateData.banned = banned;
+
       const [user] = await db
         .update(users)
-        .set({
-          ...(name && { name }),
-          ...(image !== undefined && { image }),
-          ...(role && { role }),
-          ...(banned !== undefined && { banned }),
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(eq(users.id, id))
         .returning();
 
@@ -169,7 +171,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
         .values({
           userId,
           tenantId: tenant_id,
-          role: (role as 'owner' | 'admin' | 'member' | 'viewer') || 'member',
+          role: role,
         })
         .returning();
 
@@ -196,7 +198,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       const [membership] = await db
         .update(userTenants)
         .set({
-          role: role as 'owner' | 'admin' | 'member' | 'viewer',
+          role: role,
           updatedAt: sql`datetime('now')`,
         })
         .where(sql`${userTenants.userId} = ${userId} AND ${userTenants.tenantId} = ${tenantId}`)
@@ -252,10 +254,10 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     try {
       const cache = createCacheManager(c.env.CACHE);
       const deletedCount = await cache.purgeByType('users');
-      
-      return c.json({ 
+
+      return c.json({
         message: 'Users cache purged successfully',
-        deletedCount 
+        deletedCount
       });
     } catch (error) {
       console.error('Error purging users cache:', error);

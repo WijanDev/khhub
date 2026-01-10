@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ZodSchema } from 'zod';
+import type { ZodType } from 'zod';
 import type { TFunction } from 'i18next';
 
 /**
@@ -24,11 +24,11 @@ function extractErrorMessage(errors: unknown[]): string | null {
   // If it's an object with 'message' property
   if (error && typeof error === 'object') {
     const errorObj = error as Record<string, unknown>;
-    
+
     if ('message' in errorObj && typeof errorObj.message === 'string') {
       return errorObj.message;
     }
-    
+
     // Check for issues array (ZodError-like)
     if ('issues' in errorObj && Array.isArray(errorObj.issues)) {
       const firstIssue = errorObj.issues[0] as { message?: string } | undefined;
@@ -38,7 +38,7 @@ function extractErrorMessage(errors: unknown[]): string | null {
 
   // Fallback: convert to string if it's not an empty object
   const str = String(error);
-  return str !== '[object Object]' ? str : null;
+  return str === '[object Object]' ? null : str;
 }
 
 /**
@@ -48,7 +48,7 @@ function extractErrorMessage(errors: unknown[]): string | null {
 export function getFieldError(errors: unknown[], t: TFunction): string | null {
   const message = extractErrorMessage(errors);
   if (!message) return null;
-  
+
   // Translate the message
   return t(message);
 }
@@ -65,23 +65,23 @@ export function hasFieldError(isBlurred: boolean, errors: unknown[]): boolean {
  * Create a TanStack Form validator from a Zod schema
  * This properly formats the errors for form-level validation
  */
-export function zodValidator<T>(schema: ZodSchema<T>) {
+export function zodValidator<T>(schema: ZodType<T>) {
   return ({ value }: { value: T }) => {
     const result = schema.safeParse(value);
     if (result.success) {
       return undefined;
     }
-    
+
     // Convert Zod errors to field errors map
     const fieldErrors: Record<string, string> = {};
-    
+
     for (const issue of result.error.issues) {
       const path = issue.path.join('.') || '_root';
       if (!fieldErrors[path]) {
         fieldErrors[path] = issue.message;
       }
     }
-    
+
     return fieldErrors;
   };
 }
@@ -90,7 +90,7 @@ export function zodValidator<T>(schema: ZodSchema<T>) {
  * Create a field-level validator from a Zod schema's field
  * Returns the error message directly for single field validation
  */
-export function zodFieldValidator<T>(schema: ZodSchema<T>) {
+export function zodFieldValidator<T>(schema: ZodType<T>) {
   return ({ value }: { value: T }) => {
     const result = schema.safeParse(value);
     if (result.success) {
