@@ -4,13 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
-import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
+import { zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { resetPassword } from '@/lib/auth-client';
 import { AuthCard } from '@/components/auth/auth-card';
 import { AuthError } from '@/components/auth/auth-error';
+import { AuthFormField } from '@/components/auth/auth-form-field';
+import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
 
 // Schema for password field
 const PasswordSchema = z.string().min(8, 'validation.password.minLength').max(128, 'validation.password.maxLength');
@@ -134,9 +135,11 @@ function ResetPasswordPage() {
         description={t('auth.resetPassword.description')}
         footer={
           <div className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
-              {form.state.isSubmitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
-            </Button>
+            <AuthFormSubmit
+              isSubmitting={form.state.isSubmitting}
+              labelKey="auth.resetPassword.submit"
+              submittingLabelKey="auth.resetPassword.submitting"
+            />
             <Link
               to="/auth/signin"
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
@@ -157,23 +160,14 @@ function ResetPasswordPage() {
             }}
           >
             {(field) => (
-              <FormField field={field}>
-                <FormLabel htmlFor="newPassword">{t('auth.resetPassword.newPassword')}</FormLabel>
-                <FormControl>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    disabled={form.state.isSubmitting}
-                  />
-                </FormControl>
-                {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                  <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                )}
-              </FormField>
+              <AuthFormField
+                field={field}
+                id="newPassword"
+                label={t('auth.resetPassword.newPassword')}
+                type="password"
+                placeholder="••••••••"
+                disabled={form.state.isSubmitting}
+              />
             )}
           </form.Field>
 
@@ -190,23 +184,14 @@ function ResetPasswordPage() {
             }}
           >
             {(field) => (
-              <FormField field={field}>
-                <FormLabel htmlFor="confirmPassword">{t('auth.resetPassword.confirmPassword')}</FormLabel>
-                <FormControl>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    disabled={form.state.isSubmitting}
-                  />
-                </FormControl>
-                {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                  <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                )}
-              </FormField>
+              <AuthFormField
+                field={field}
+                id="confirmPassword"
+                label={t('auth.resetPassword.confirmPassword')}
+                type="password"
+                placeholder="••••••••"
+                disabled={form.state.isSubmitting}
+              />
             )}
           </form.Field>
         </div>

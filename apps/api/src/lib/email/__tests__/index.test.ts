@@ -4,9 +4,7 @@ import {
   UnosendEmailService,
   MailgunEmailService,
   ResendEmailService,
-  EmailTemplates,
 } from '../index';
-import type { EmailService } from '../types';
 
 vi.mock('../unosend', () => ({
   UnosendEmailService: class {

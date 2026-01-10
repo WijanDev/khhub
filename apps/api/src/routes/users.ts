@@ -171,7 +171,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
         .values({
           userId,
           tenantId: tenant_id,
-          role: (role as 'owner' | 'admin' | 'member' | 'viewer') || 'member',
+          role: role,
         })
         .returning();
 
@@ -198,7 +198,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       const [membership] = await db
         .update(userTenants)
         .set({
-          role: role as 'owner' | 'admin' | 'member' | 'viewer',
+          role: role,
           updatedAt: sql`datetime('now')`,
         })
         .where(sql`${userTenants.userId} = ${userId} AND ${userTenants.tenantId} = ${tenantId}`)

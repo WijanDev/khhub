@@ -2,15 +2,15 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { signIn } from '@/lib/auth-client';
 import { SignInSchema } from '@khhub/shared';
-import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
+import { zodValidator, zodFieldValidator } from '@/lib/form-utils';
 import { EmailVerificationCard } from '@/components/ui/email-verification-card';
 import { AuthCard } from '@/components/auth/auth-card';
 import { AuthError } from '@/components/auth/auth-error';
+import { AuthFormField } from '@/components/auth/auth-form-field';
+import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
 
 export const Route = createFileRoute('/auth/signin')({
   component: SignInPage,
@@ -84,7 +84,6 @@ function SignInPage() {
       <EmailVerificationCard userEmail={userEmail} />
     ) : (
       <Form
-
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -97,9 +96,11 @@ function SignInPage() {
           description={t('auth.signIn.description')}
           footer={
             <>
-              <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
-                {form.state.isSubmitting ? t('auth.signIn.submitting') : t('auth.signIn.submit')}
-              </Button>
+              <AuthFormSubmit
+                isSubmitting={form.state.isSubmitting}
+                labelKey="auth.signIn.submit"
+                submittingLabelKey="auth.signIn.submitting"
+              />
               <p className="text-center text-sm text-muted-foreground">
                 {t('auth.signIn.noAccount')}{' '}
                 <Link to="/auth/signup" className="font-medium text-primary hover:underline">
@@ -119,23 +120,14 @@ function SignInPage() {
               }}
             >
               {(field) => (
-                <FormField field={field}>
-                  <FormLabel htmlFor="email">{t('auth.signIn.email')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="name@example.com"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      disabled={form.state.isSubmitting}
-                    />
-                  </FormControl>
-                  {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                    <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                  )}
-                </FormField>
+                <AuthFormField
+                  field={field}
+                  id="email"
+                  label={t('auth.signIn.email')}
+                  type="email"
+                  placeholder="name@example.com"
+                  disabled={form.state.isSubmitting}
+                />
               )}
             </form.Field>
 
@@ -146,31 +138,22 @@ function SignInPage() {
               }}
             >
               {(field) => (
-                <FormField field={field}>
-                  <div className="flex items-center justify-between">
-                    <FormLabel htmlFor="password">{t('auth.signIn.password')}</FormLabel>
+                <AuthFormField
+                  field={field}
+                  id="password"
+                  label={t('auth.signIn.password')}
+                  type="password"
+                  placeholder="••••••••"
+                  disabled={form.state.isSubmitting}
+                  rightElement={
                     <Link
                       to="/auth/forgot-password"
                       className="text-xs text-muted-foreground hover:text-primary"
                     >
                       {t('auth.signIn.forgotPassword')}
                     </Link>
-                  </div>
-                  <FormControl>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      disabled={form.state.isSubmitting}
-                    />
-                  </FormControl>
-                  {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                    <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                  )}
-                </FormField>
+                  }
+                />
               )}
             </form.Field>
           </div>

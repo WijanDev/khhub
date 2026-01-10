@@ -4,13 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { ArrowLeft, Mail } from 'lucide-react';
-import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
+import { zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { requestPasswordReset } from '@/lib/auth-client';
 import { AuthCard } from '@/components/auth/auth-card';
 import { AuthError } from '@/components/auth/auth-error';
+import { AuthFormField } from '@/components/auth/auth-form-field';
+import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
 
 // Simple schema for forgot password (just email)
 const ForgotPasswordFormSchema = z.object({
@@ -113,9 +114,11 @@ function ForgotPasswordPage() {
         description={t('auth.forgotPassword.description')}
         footer={
           <>
-            <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
-              {form.state.isSubmitting ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
-            </Button>
+            <AuthFormSubmit
+              isSubmitting={form.state.isSubmitting}
+              labelKey="auth.forgotPassword.submit"
+              submittingLabelKey="auth.forgotPassword.submitting"
+            />
             <Link
               to="/auth/signin"
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
@@ -136,23 +139,14 @@ function ForgotPasswordPage() {
             }}
           >
             {(field) => (
-              <FormField field={field}>
-                <FormLabel htmlFor="email">{t('auth.forgotPassword.email')}</FormLabel>
-                <FormControl>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    disabled={form.state.isSubmitting}
-                  />
-                </FormControl>
-                {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                  <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                )}
-              </FormField>
+              <AuthFormField
+                field={field}
+                id="email"
+                label={t('auth.forgotPassword.email')}
+                type="email"
+                placeholder="name@example.com"
+                disabled={form.state.isSubmitting}
+              />
             )}
           </form.Field>
         </div>

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MailgunEmailService } from '../mailgun';
-import type { SendEmailOptions } from '../types';
 
 vi.mock('mailgun.js', () => {
   const mockMessagesCreate = vi.fn();
@@ -12,7 +11,6 @@ vi.mock('mailgun.js', () => {
 
   class MockMailgun {
     client = mockClient;
-    constructor(_formData: typeof FormData) { }
   }
 
   return {
@@ -28,7 +26,6 @@ describe('MailgunEmailService', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    globalThis.FormData = FormData;
     const mailgunModule = await import('mailgun.js');
     mockMessagesCreate = (mailgunModule as any).__mockMessagesCreate;
     mockClient = (mailgunModule as any).__mockClient;

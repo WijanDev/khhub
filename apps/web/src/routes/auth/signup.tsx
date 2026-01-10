@@ -3,15 +3,15 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormField, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { signUp } from '@/lib/auth-client';
 import { SignUpSchema } from '@khhub/shared';
-import { getFieldError, hasFieldError, zodFieldValidator, zodValidator } from '@/lib/form-utils';
+import { zodFieldValidator, zodValidator } from '@/lib/form-utils';
 import { EmailVerificationCard } from '@/components/ui/email-verification-card';
 import { AuthCard } from '@/components/auth/auth-card';
 import { AuthError } from '@/components/auth/auth-error';
+import { AuthFormField } from '@/components/auth/auth-form-field';
+import { AuthFormSubmit } from '@/components/auth/auth-form-submit';
 
 // Extended schema with password confirmation
 const SignUpFormSchema = SignUpSchema.extend({
@@ -86,9 +86,11 @@ function SignUpPage() {
             description={t('auth.signUp.description')}
             footer={
               <>
-                <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
-                  {form.state.isSubmitting ? t('auth.signUp.submitting') : t('auth.signUp.submit')}
-                </Button>
+                <AuthFormSubmit
+                  isSubmitting={form.state.isSubmitting}
+                  labelKey="auth.signUp.submit"
+                  submittingLabelKey="auth.signUp.submitting"
+                />
                 <p className="text-center text-sm text-muted-foreground">
                   {t('auth.signUp.hasAccount')}{' '}
                   <Link to="/auth/signin" className="font-medium text-primary hover:underline">
@@ -108,23 +110,13 @@ function SignUpPage() {
                 }}
               >
                 {(field) => (
-                  <FormField field={field}>
-                    <FormLabel htmlFor="name">{t('auth.signUp.name')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="John Doe"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        disabled={form.state.isSubmitting}
-                      />
-                    </FormControl>
-                    {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                      <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                    )}
-                  </FormField>
+                  <AuthFormField
+                    field={field}
+                    id="name"
+                    label={t('auth.signUp.name')}
+                    placeholder="John Doe"
+                    disabled={form.state.isSubmitting}
+                  />
                 )}
               </form.Field>
 
@@ -135,23 +127,14 @@ function SignUpPage() {
                 }}
               >
                 {(field) => (
-                  <FormField field={field}>
-                    <FormLabel htmlFor="email">{t('auth.signUp.email')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        disabled={form.state.isSubmitting}
-                      />
-                    </FormControl>
-                    {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                      <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                    )}
-                  </FormField>
+                  <AuthFormField
+                    field={field}
+                    id="email"
+                    label={t('auth.signUp.email')}
+                    type="email"
+                    placeholder="name@example.com"
+                    disabled={form.state.isSubmitting}
+                  />
                 )}
               </form.Field>
 
@@ -162,23 +145,14 @@ function SignUpPage() {
                 }}
               >
                 {(field) => (
-                  <FormField field={field}>
-                    <FormLabel htmlFor="password">{t('auth.signUp.password')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        disabled={form.state.isSubmitting}
-                      />
-                    </FormControl>
-                    {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                      <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                    )}
-                  </FormField>
+                  <AuthFormField
+                    field={field}
+                    id="password"
+                    label={t('auth.signUp.password')}
+                    type="password"
+                    placeholder="••••••••"
+                    disabled={form.state.isSubmitting}
+                  />
                 )}
               </form.Field>
 
@@ -195,23 +169,14 @@ function SignUpPage() {
                 }}
               >
                 {(field) => (
-                  <FormField field={field}>
-                    <FormLabel htmlFor="confirmPassword">{t('auth.signUp.confirmPassword')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        disabled={form.state.isSubmitting}
-                      />
-                    </FormControl>
-                    {hasFieldError(field.state.meta.isBlurred, field.state.meta.errors) && (
-                      <FormMessage>{getFieldError(field.state.meta.errors, t)}</FormMessage>
-                    )}
-                  </FormField>
+                  <AuthFormField
+                    field={field}
+                    id="confirmPassword"
+                    label={t('auth.signUp.confirmPassword')}
+                    type="password"
+                    placeholder="••••••••"
+                    disabled={form.state.isSubmitting}
+                  />
                 )}
               </form.Field>
             </div>
