@@ -22,6 +22,11 @@ const mockT = vi.fn((key: string) => {
     'auth.emailVerification.resending': 'Resending...',
     'auth.emailVerification.resendSuccess': 'Verification email sent successfully',
     'auth.emailVerification.resendError': 'Failed to send verification email',
+    'auth.signUp.success.title': 'Account Created',
+    'auth.signUp.success.description': 'Please verify your email {{email}}',
+    'auth.signUp.success.verifyTitle': 'Verify your email',
+    'auth.signUp.success.verifyDescription': 'Click the link in your email to verify your account',
+    'auth.signUp.success.signIn': 'Sign In',
   };
   return translations[key] || key;
 });
@@ -344,6 +349,38 @@ describe('SignInPage', () => {
     if (mockOnSubmit) {
       await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
       expect((globalThis as any).__mockNavigate__).toHaveBeenCalledWith({ to: '/app/dashboard' });
+    }
+  });
+
+  it('should show email verification card when result.error is related to email verification', async () => {
+    (globalThis as any).__mockSignInEmail__.mockResolvedValue({
+      error: { message: 'email verification required' }
+    });
+    render(<route.component />);
+    if (mockOnSubmit) {
+      await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
+      expect(screen.getByText('Account Created')).toBeDefined();
+    }
+  });
+
+  it('should show email verification card when result.error is a string related to email verification', async () => {
+    // This tests the JSON.stringify(result.error) logic
+    (globalThis as any).__mockSignInEmail__.mockResolvedValue({
+      error: 'not verified email'
+    });
+    render(<route.component />);
+    if (mockOnSubmit) {
+      await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
+      expect(screen.getByText('Account Created')).toBeDefined();
+    }
+  });
+
+  it('should show email verification card when signIn.email throws an error related to email verification', async () => {
+    (globalThis as any).__mockSignInEmail__.mockRejectedValue(new Error('Email is not verified'));
+    render(<route.component />);
+    if (mockOnSubmit) {
+      await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
+      expect(screen.getByText('Account Created')).toBeDefined();
     }
   });
 });
