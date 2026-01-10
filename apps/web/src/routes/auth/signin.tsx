@@ -41,7 +41,7 @@ function SignInPage() {
 
         if (result.error) {
           // Check if error is related to email verification
-          const errorMessage = result.error.message || result.error.toString();
+          const errorMessage = result.error.message || JSON.stringify(result.error);
           if (
             errorMessage.toLowerCase().includes('email') &&
             (errorMessage.toLowerCase().includes('verify') ||
