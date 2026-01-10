@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
 // Create mocks and store in globalThis for access in factories
 const mockT = vi.fn((key: string) => {
@@ -359,7 +359,9 @@ describe('SignInPage', () => {
     render(<route.component />);
     if (mockOnSubmit) {
       await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
-      expect(screen.getByText('Account Created')).toBeDefined();
+      await waitFor(() => {
+        expect(screen.getByText('Account Created')).toBeDefined();
+      });
     }
   });
 
@@ -371,7 +373,9 @@ describe('SignInPage', () => {
     render(<route.component />);
     if (mockOnSubmit) {
       await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
-      expect(screen.getByText('Account Created')).toBeDefined();
+      await waitFor(() => {
+        expect(screen.getByText('Account Created')).toBeDefined();
+      });
     }
   });
 
@@ -380,7 +384,33 @@ describe('SignInPage', () => {
     render(<route.component />);
     if (mockOnSubmit) {
       await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
-      expect(screen.getByText('Account Created')).toBeDefined();
+      await waitFor(() => {
+        expect(screen.getByText('Account Created')).toBeDefined();
+      });
+    }
+  });
+
+  it('should show invalid credentials error when result.error is NOT related to email verification', async () => {
+    (globalThis as any).__mockSignInEmail__.mockResolvedValue({
+      error: { message: 'invalid password' }
+    });
+    render(<route.component />);
+    if (mockOnSubmit) {
+      await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
+      await waitFor(() => {
+        expect(screen.getByText('Invalid credentials')).toBeDefined();
+      });
+    }
+  });
+
+  it('should show generic error when signIn.email throws a generic error', async () => {
+    (globalThis as any).__mockSignInEmail__.mockRejectedValue(new Error('Something went wrong'));
+    render(<route.component />);
+    if (mockOnSubmit) {
+      await mockOnSubmit({ value: { email: 'test@example.com', password: TEST_PASSWORD } });
+      await waitFor(() => {
+        expect(screen.getByText('An error occurred. Please try again.')).toBeDefined();
+      });
     }
   });
 });
