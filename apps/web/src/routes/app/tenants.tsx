@@ -29,6 +29,7 @@ function TenantsPage() {
     ['active', 'bg-green-500/10 text-green-500'],
     ['suspended', 'bg-red-500/10 text-red-500'],
     ['inactive', 'bg-yellow-500/10 text-yellow-500'],
+    ['pending', 'bg-yellow-500/10 text-yellow-500'],
     [null, 'bg-gray-500/10 text-gray-500'],
   ]);
 
