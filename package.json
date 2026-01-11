@@ -14,10 +14,11 @@
     "build:web": "npm run build -w @khhub/web",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
     "test:api": "npm run test -w @khhub/api",
     "test:web": "npm run test -w @khhub/web",
-    "test:coverage": "npm run test:coverage --workspaces --if-present"
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
