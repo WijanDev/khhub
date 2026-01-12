@@ -7,7 +7,11 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   plugins: [
-    tanstackStart(),
+    tanstackStart({
+      router: {
+        routeFileIgnorePattern: 'test.ts',
+      },
+    }),
     cloudflare(),
     react(),
     tailwindcss(),
