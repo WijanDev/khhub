@@ -6,27 +6,35 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently --kill-others-on-fail \"npm:dev:*\"",
-    "dev:api": "npm run dev -w @khhub/api",
-    "dev:web": "npm run dev -w @khhub/web",
-    "build": "npm run build --workspaces --if-present",
-    "build:api": "npm run build -w @khhub/api",
-    "build:web": "npm run build -w @khhub/web",
-    "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@khhub/api",
+    "dev:web": "turbo run dev --filter=@khhub/web",
+    "build": "turbo run build",
+    "build:api": "turbo run build --filter=@khhub/api",
+    "build:web": "turbo run build --filter=@khhub/web",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
     "test": "vitest run",
-    "test:ui": "vitest --ui",
-    "test:api": "npm run test -w @khhub/api",
-    "test:web": "npm run test -w @khhub/web",
-    "test:coverage": "vitest run --coverage"
+    "test:ui": "vitest run --ui",
+    "test:api": "vitest run --filter=@khhub/api",
+    "test:web": "vitest run --filter=@khhub/web",
+    "test:coverage": "vitest run --coverage",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "turbo run db:generate --filter=@khhub/api",
+    "db:migrate": "turbo run db:migrate --filter=@khhub/api",
+    "db:migrate:prod": "turbo run db:migrate:prod --filter=@khhub/api",
+    "db:push": "turbo run db:push --filter=@khhub/api",
+    "db:studio": "turbo run db:studio --filter=@khhub/api"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "turbo": "^2.7.3",
     "typescript": "^5.9.3"
   },
   "overrides": {
     "zod": "^4.3.4"
   },
+  "packageManager": "npm@11.6.2",
   "engines": {
     "node": ">=20.0.0"
   },

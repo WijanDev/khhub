@@ -5,8 +5,9 @@ import type { D1Database } from '@cloudflare/workers-types';
 import type { Env } from '../types';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
-import { EmailTemplates, type EmailService } from './email';
+import { type EmailService } from './email';
 import { createEmailServiceFromEnv } from './email/service';
+import { EmailTemplates } from './email/templates';
 
 interface AuthOptions {
   baseURL: string;

@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createAuth, getAuth, type Auth } from '../auth';
 import { createMockD1, createMockEnv } from '../../test/setup';
-import type { Env } from '../../types';
 import type { EmailService } from '../email';
-import { EmailTemplates } from '../email';
+import { EmailTemplates } from '../email/templates';
 
 const mockBetterAuth = vi.fn((config) => ({
   handler: vi.fn(),
@@ -290,6 +289,8 @@ describe('Auth', () => {
         sendEmail: sendEmailSpy,
       } as unknown as EmailService;
 
+      const EmailTemplatesSpy = vi.spyOn(EmailTemplates, 'passwordReset');
+
       vi.clearAllMocks();
       createAuth(mockD1, {
         baseURL: 'https://api.example.com',
@@ -303,7 +304,7 @@ describe('Auth', () => {
       expect(mockFn).toHaveBeenCalled();
       const config = mockFn.mock.calls[0][0];
       expect(config.emailAndPassword?.sendResetPassword).toBeDefined();
-      
+
       const user = { email: 'test@example.com', name: 'Test User' };
       const token = 'reset-token-123';
       await config.emailAndPassword.sendResetPassword({ user, token });
@@ -313,7 +314,8 @@ describe('Auth', () => {
         subject: 'Reset your password - KH Hub',
         html: expect.stringContaining('reset-token-123'),
       });
-      expect(EmailTemplates.passwordReset).toHaveBeenCalledWith('Test User', 'https://app.example.com/auth/reset-password?token=reset-token-123');
+
+      expect(EmailTemplatesSpy).toHaveBeenCalledWith('Test User', 'https://app.example.com/auth/reset-password?token=reset-token-123');
     });
 
     it('should configure email verification callback', async () => {
@@ -321,6 +323,7 @@ describe('Auth', () => {
       const emailService = {
         sendEmail: sendEmailSpy,
       } as unknown as EmailService;
+      const EmailTemplatesSpy = vi.spyOn(EmailTemplates, 'emailVerification');
 
       vi.clearAllMocks();
       createAuth(mockD1, {
@@ -335,7 +338,7 @@ describe('Auth', () => {
       expect(mockFn).toHaveBeenCalled();
       const config = mockFn.mock.calls[0][0];
       expect(config.emailVerification?.sendVerificationEmail).toBeDefined();
-      
+
       const user = { email: 'test@example.com', name: 'Test User' };
       const token = 'verify-token-456';
       await config.emailVerification.sendVerificationEmail({ user, token });
@@ -345,7 +348,8 @@ describe('Auth', () => {
         subject: 'Verify your email - KH Hub',
         html: expect.stringContaining('verify-token-456'),
       });
-      expect(EmailTemplates.emailVerification).toHaveBeenCalledWith('Test User', 'https://app.example.com/auth/verify-email?token=verify-token-456');
+
+      expect(EmailTemplatesSpy).toHaveBeenCalledWith('Test User', 'https://app.example.com/auth/verify-email?token=verify-token-456');
     });
   });
 
