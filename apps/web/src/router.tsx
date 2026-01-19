@@ -1,9 +1,41 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
-import * as TanstackQuery from '@/providers/tanstack-query'
+import * as TanstackQuery from '@/shared/application/providers/tanstack-query'
+import { rootRoute } from '@/shared/presentation/routing/root'
+import { publicRouting, homeRoute, aboutRoute } from '@/features/public/presentation/routing'
 
-// Import the generated route tree
-import { routeTree } from './routeTree.gen'
+import { authRoute, signInRoute, signUpRoute, forgotPasswordRoute, resetPasswordRoute, verifyEmailRoute } from '@/features/auth/presentation/routing'
+import { appRoute, dashboardRoute } from '@/features/app/presentation/routing'
+import { usersRoute, usersIndexRoute } from '@/features/users/presentation/routing'
+import { tenantsRoute, tenantsIndexRoute } from '@/features/tenants/presentation/routing'
+import { settingsRoute, settingsIndexRoute } from '@/features/settings/presentation/routing'
+
+// Configure nested routes and create route tree
+const routeTree = rootRoute.addChildren([
+  publicRouting.addChildren([
+    homeRoute,
+    aboutRoute,
+  ]),
+  authRoute.addChildren([
+    signInRoute,
+    signUpRoute,
+    forgotPasswordRoute,
+    resetPasswordRoute,
+    verifyEmailRoute,
+  ]),
+  appRoute.addChildren([
+    dashboardRoute,
+    usersRoute.addChildren([
+      usersIndexRoute,
+    ]),
+    tenantsRoute.addChildren([
+      tenantsIndexRoute,
+    ]),
+    settingsRoute.addChildren([
+      settingsIndexRoute,
+    ]),
+  ]),
+])
 
 // Create a new router instance
 export function getRouter() {
@@ -25,4 +57,11 @@ export function getRouter() {
   setupRouterSsrQueryIntegration({ router, queryClient: rqContext.queryClient })
 
   return router
+}
+
+// Register key types
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: ReturnType<typeof getRouter>
+  }
 }

@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import type { Env, Variables } from './types';
-import authRoutes from './routes/auth';
-import tenantsRoutes from './routes/tenants';
-import usersRoutes from './routes/users';
-import storageRoutes from './routes/storage';
-import { createCacheManager } from './lib/cache';
+import type { Env, Variables } from './shared/domain/types';
+import authRoutes from './features/auth/infrastructure/http/router';
+import tenantsRoutes from './features/tenants/infrastructure/http/router';
+import usersRoutes from './features/users/infrastructure/http/router';
+import storageRoutes from './features/storage/infrastructure/http/router';
+import cacheRoutes from './features/cache/infrastructure/http/router';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -45,40 +45,7 @@ const apiRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     return c.json({ message: 'Hello from Hono API!' });
   })
   // Cache management endpoints
-  .post('/cache/purge', async (c) => {
-    try {
-      const cache = createCacheManager(c.env.CACHE);
-      const deletedCount = await cache.purgeAll();
-      
-      return c.json({ 
-        message: 'All cache purged successfully',
-        deletedCount 
-      });
-    } catch (error) {
-      console.error('Error purging cache:', error);
-      return c.json({ error: 'Failed to purge cache' }, 500);
-    }
-  })
-  .post('/cache/purge/:type', async (c) => {
-    try {
-      const type = c.req.param('type') as 'users' | 'tenants' | 'sessions';
-      
-      if (!['users', 'tenants', 'sessions'].includes(type)) {
-        return c.json({ error: 'Invalid cache type. Must be: users, tenants, or sessions' }, 400);
-      }
-
-      const cache = createCacheManager(c.env.CACHE);
-      const deletedCount = await cache.purgeByType(type);
-      
-      return c.json({ 
-        message: `${type} cache purged successfully`,
-        deletedCount 
-      });
-    } catch (error) {
-      console.error(`Error purging ${c.req.param('type')} cache:`, error);
-      return c.json({ error: 'Failed to purge cache' }, 500);
-    }
-  })
+  .route('/cache', cacheRoutes)
   // Auth routes (handled by Better Auth)
   .route('/auth', authRoutes)
   // Mount route modules
