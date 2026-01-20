@@ -362,7 +362,7 @@ describe('AppLayout', () => {
     expect(toggleButton).toBeDefined();
   });
 
-  it.skip('should toggle sidebar when mobile toggle button is clicked', async () => {
+  it('should toggle sidebar when mobile toggle button is clicked', async () => {
     const { fireEvent } = await import('@testing-library/react');
     const { container } = render(<route.component />);
 
