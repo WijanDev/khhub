@@ -246,7 +246,7 @@ describe('AppLayout', () => {
     vi.clearAllMocks();
     (globalThis as any).__mockUseSession__.mockReturnValue(mockSession);
     (globalThis as any).__mockNavigate__.mockReturnValue(undefined);
-    useAppStore.setState({ sidebarOpen: false });
+    useAppStore.setState({ settings: { sidebarOpen: false, languageSwitcherOpen: false, language: 'en' } });
   });
 
   it('should render the component', () => {

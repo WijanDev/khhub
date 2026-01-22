@@ -35,7 +35,7 @@ import { useAppStore } from '@/shared/application/stores/app-store';
 export function AppLayout() {
     const { t } = useTranslation();
     const { isPending } = useSession();
-    const { sidebarOpen, toggleSidebar, setSidebarOpen } = useAppStore();
+    const { settings, toggleSidebar, setSidebarOpen } = useAppStore();
 
     if (isPending) {
         return (
@@ -54,11 +54,11 @@ export function AppLayout() {
                 className="fixed left-4 top-20 z-50 lg:hidden"
                 onClick={toggleSidebar}
             >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {settings.sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
 
             {/* Sidebar overlay for mobile */}
-            {sidebarOpen && (
+            {settings.sidebarOpen && (
                 <div
                     aria-hidden="true"
                     className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
