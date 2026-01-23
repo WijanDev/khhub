@@ -1,14 +1,43 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
+      ],
+      "@auth/*": [
+        "./src/features/auth/*"
+      ],
+      "@tenants/*": [
+        "./src/features/tenants/*"
+      ],
+      "@users/*": [
+        "./src/features/users/*"
+      ]
     },
-    "types": ["vitest/globals"]
+    "types": [
+      "vitest/globals",
+      "node"
+    ]
   },
-  "include": ["src/**/*", "src/test/vitest-setup.d.ts"],
-  "exclude": ["node_modules", "dist", ".output"]
+  "include": [
+    "src/**/*",
+    "tests/**/*",
+    "src/test/vitest-setup.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".output"
+  ]
 }

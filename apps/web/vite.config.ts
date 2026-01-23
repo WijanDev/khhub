@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     tanstackStart({
       router: {
-        routeFileIgnorePattern: 'test.ts',
+        routeFileIgnorePattern: '.+', // Ignore all files to effectively disable file-based routing logic for now
       },
     }),
     cloudflare(),
@@ -19,6 +19,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
+      '@shared': resolve(__dirname, './src/shared'),
+      '@auth': resolve(__dirname, './src/features/auth'),
+      '@tenants': resolve(__dirname, './src/features/tenants'),
+      '@users': resolve(__dirname, './src/features/users'),
     },
   },
   server: {

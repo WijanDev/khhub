@@ -9,23 +9,44 @@ khhub/
 ├── apps/
 │   ├── api/          # Hono API server (Cloudflare Workers)
 │   │   ├── src/
-│   │   │   ├── routes/       # API route modules
-│   │   │   ├── lib/          # Utilities (tenant DB manager)
-│   │   │   ├── types.ts      # TypeScript types
+│   │   │   ├── features/     # Feature modules (VSA)
+│   │   │   │   ├── auth/
+│   │   │   │   ├── users/
+│   │   │   │   ├── tenants/
+│   │   │   │   └── ...
+│   │   │   ├── shared/       # Shared code (infrastructure, domain)
+│   │   │   │   ├── infrastructure/
+│   │   │   │   └── domain/
 │   │   │   └── index.ts      # Main entry point
 │   │   └── migrations/       # D1 database migrations
 │   └── web/          # TanStack Start SSR webapp
-│       └── src/
-│           ├── routes/       # File-based routing
-│           ├── components/   # UI components (shadcn)
-│           ├── styles/
-│           ├── router.tsx
-│           ├── client.tsx
-│           └── ssr.tsx
-├── packages/         # Shared packages (for future use)
+│       ├── src/
+│       │   ├── routes/       # File-based routing
+│       │   ├── components/   # UI components (shadcn)
+│       │   └── ...
+│       ├── app/              # App entry points
+│       └── ...
+├── packages/         # Shared packages
+│   └── shared/       # Shared types and validation schemas
 ├── package.json      # Root workspace configuration
-└── tsconfig.base.json
+└── ...
 ```
+
+## 🏗️ Architecture
+
+This project follows a **Vertical Slice Architecture** (VSA) in the API, organizing code by feature rather than technical layer.
+
+### Features
+Each feature (e.g., `auth`, `users`, `tenants`) is self-contained with its own:
+- **Infrastructure**: HTTP routers, database repositories, adapters
+- **Application**: Use cases, business logic
+- **Domain**: Types, interfaces
+
+### Path Aliases
+We use path aliases to simplify imports and enforce boundaries:
+- `@shared/*` -> Shared infrastructure and domain types
+- `@features/*` -> Feature specific code (restricted usage)
+- `@auth/*`, `@users/*`, etc. -> Feature aliases
 
 ## 🏢 Multi-Tenant Architecture
 
@@ -170,7 +191,8 @@ The API uses Cloudflare D1 (SQLite) with Drizzle ORM for type-safe database oper
 Schema is defined in `apps/api/src/db/schema.ts`:
 
 ```typescript
-import { createDb, users, tenants, userTenants } from './db';
+import { createDb, users, userTenants } from '@shared/infrastructure/db';
+import { eq } from 'drizzle-orm';
 
 const db = createDb(c.env.DB);
 
@@ -184,7 +206,10 @@ const user = await db.query.users.findFirst({
 const [newUser] = await db.insert(users).values({ email, name, passwordHash }).returning();
 
 // Update
-await db.update(users).set({ name }).where(eq(users.id, id));
+const [updatedUser] = await db.update(users)
+  .set({ name })
+  .where(eq(users.id, id))
+  .returning();
 
 // Delete
 await db.delete(users).where(eq(users.id, id));
@@ -272,7 +297,7 @@ The API uses Cloudflare KV for caching frequently accessed data.
 ### Cache Utilities
 
 ```typescript
-import { createCacheManager, CacheKeys, CacheTTL } from './lib/cache';
+import { createCacheManager, CacheKeys, CacheTTL } from '@cache/infrastructure/kv-cache';
 
 const cache = createCacheManager(c.env.CACHE);
 
@@ -339,7 +364,7 @@ khhub-storage/
 ### Storage Utilities
 
 ```typescript
-import { createStorageManager, StoragePaths, MaxFileSizes } from './lib/storage';
+import { createStorageManager, StoragePaths, MaxFileSizes } from '@storage/infrastructure/r2-storage';
 
 const storage = createStorageManager(c.env.STORAGE);
 
