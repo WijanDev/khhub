@@ -41,6 +41,11 @@ export interface ListResult {
     prefixes?: string[];
 }
 
+export interface DownloadResult {
+    data: ReadableStream;
+    info: FileInfo;
+}
+
 export class StorageManager {
     private readonly bucket: R2Bucket;
     private readonly basePrefix: string;
@@ -89,7 +94,7 @@ export class StorageManager {
     /**
      * Download a file
      */
-    async download(path: string): Promise<{ data: ReadableStream; info: FileInfo } | null> {
+    async download(path: string): Promise<DownloadResult | null> {
         const key = this.key(path);
         const object = await this.bucket.get(key);
 

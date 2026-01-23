@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '@shared/domain/types';
-import { createStorageManager, StoragePaths, AllowedFileTypes, MaxFileSizes } from '../r2-storage';
+import { createStorageManager, StoragePaths, AllowedFileTypes, MaxFileSizes, DownloadResult } from '../r2-storage';
 
 // Chain routes for proper type inference (Hono RPC)
 const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
@@ -111,14 +111,7 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
                 return c.json({ error: 'File not found' }, 404);
             }
 
-            return new Response(file.data, {
-                headers: {
-                    'Content-Type': file.info.contentType || 'application/octet-stream',
-                    'Content-Length': file.info.size.toString(),
-                    'ETag': file.info.etag,
-                    'Cache-Control': 'public, max-age=31536000',
-                },
-            });
+            return returnResponseFile(file);
         } catch (error) {
             console.error('Error downloading file:', error);
             return c.json({ error: 'Failed to download file' }, 500);
@@ -241,6 +234,17 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
             return c.json({ error: 'Failed to delete avatar' }, 500);
         }
     });
+
+const returnResponseFile = (file: DownloadResult) => {
+    return new Response(file.data, {
+        headers: {
+            'Content-Type': file.info.contentType || 'application/octet-stream',
+            'Content-Length': file.info.size.toString(),
+            'ETag': file.info.etag,
+            'Cache-Control': 'public, max-age=31536000',
+        },
+    });
+}
 
 const pathHandler = (path: string) => {
     let returnPath = path;
