@@ -169,15 +169,20 @@ vi.mock('lucide-react', () => ({
 vi.mock('@/shared/application/stores/app-store', async () => {
   const { create } = await import('zustand');
   const store = create((set) => ({
-    sidebarOpen: false,
-    settings: { language: 'en' },
-    toggleSidebar: () => {
-      console.log('toggleSidebar called');
-      set((state: any) => ({ sidebarOpen: !state.sidebarOpen }));
+    settings: {
+      sidebarOpen: false,
+      languageSwitcherOpen: false,
+      language: 'en',
     },
-    setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
-    closeSidebar: () => set({ sidebarOpen: false }),
+    toggleSidebar: () => {
+      set((state: any) => ({ settings: { ...state.settings, sidebarOpen: !state.settings.sidebarOpen } }));
+    },
+    setSidebarOpen: (open: boolean) => set((state: any) => ({ settings: { ...state.settings, sidebarOpen: open } })),
+    closeSidebar: () => set((state: any) => ({ settings: { ...state.settings, sidebarOpen: false } })),
     setLanguage: (language: string) => set((state: any) => ({ settings: { ...state.settings, language } })),
+    toggleLanguageSwitcher: () => set((state: any) => ({ settings: { ...state.settings, languageSwitcherOpen: !state.settings.languageSwitcherOpen } })),
+    setLanguageSwitcherOpen: (open: boolean) => set((state: any) => ({ settings: { ...state.settings, languageSwitcherOpen: open } })),
+    closeLanguageSwitcher: () => set((state: any) => ({ settings: { ...state.settings, languageSwitcherOpen: false } })),
   }));
   return { useAppStore: store };
 });
