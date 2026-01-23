@@ -243,14 +243,22 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     });
 
 const pathHandler = (path: string) => {
+    let returnPath = path;
     if (path.startsWith('/api/storage/files/info/')) {
-        path = path.replace('/api/storage/files/info/', '');
+        returnPath = path.replace('/api/storage/files/info/', '');
     } else if (path.startsWith('/storage/files/info/')) {
-        path = path.replace('/storage/files/info/', '');
+        returnPath = path.replace('/storage/files/info/', '');
     } else if (path.startsWith('/files/info/')) {
-        path = path.replace('/files/info/', '');
+        returnPath = path.replace('/files/info/', '');
+    } else if (path.startsWith('/files/')) {
+        returnPath = path.replace('/files/', '');
+    } else if (path.startsWith('/api/storage/files/')) {
+        returnPath = path.replace('/api/storage/files/', '');
+    } else if (path.startsWith('/storage/files/')) {
+        returnPath = path.replace('/storage/files/', '');
     }
-    return path;
+
+    return returnPath;
 }
 
 export default storageRoutes;
