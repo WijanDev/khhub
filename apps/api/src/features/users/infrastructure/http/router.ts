@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { eq, sql } from 'drizzle-orm';
 import type { Env, Variables } from '@shared/domain/types';
-import { createDb, users, userTenants } from '@shared/infrastructure/db';
-import { createCacheManager, CacheKeys, CacheTTL } from '@cache/infrastructure/kv-cache';
+import { createDb, Database, users, userTenants } from '@shared/infrastructure/db';
+import { createCacheManager, CacheKeys, CacheTTL, CacheManager } from '@cache/infrastructure/kv-cache';
 import { validateJson, validateParam, IdParamSchema, IdTenantParamSchema } from '@shared/infrastructure/http/middleware/validation';
 import { AddUserToTenantSchema, UpdateUserRoleSchema } from '@khhub/shared';
 import { z } from 'zod';
@@ -87,7 +87,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
   })
   // Update user (invalidates cache)
   .put('/:id', validateParam(IdParamSchema), validateJson(UpdateUserApiSchema), async (c) => {
-    const { id } = c.req.valid('param');
+    const { id: userId } = c.req.valid('param');
     try {
       const { name, image, role, banned } = c.req.valid('json');
 
@@ -103,7 +103,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       const [user] = await db
         .update(users)
         .set(updateData)
-        .where(eq(users.id, id))
+        .where(eq(users.id, userId))
         .returning();
 
       if (!user) {
@@ -112,7 +112,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
-      await Promise.all([cache.delete(CacheKeys.user(id)), cache.delete(CacheKeys.allUsers())]);
+      await invalidateCaches(cache, true, userId);
 
       return c.json({ message: 'User updated', user });
     } catch (error) {
@@ -166,6 +166,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       const { tenant_id, role } = c.req.valid('json');
 
       const db = createDb(c.env.DB);
+
       const [membership] = await db
         .insert(userTenants)
         .values({
@@ -177,10 +178,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
-      await Promise.all([
-        cache.delete(CacheKeys.user(userId)),
-        cache.delete(CacheKeys.tenantUsers(tenant_id)),
-      ]);
+      await invalidateCaches(cache, false, userId, tenant_id);
 
       return c.json({ message: 'User added to tenant', membership }, 201);
     } catch (error) {
@@ -195,14 +193,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       const { role } = c.req.valid('json');
 
       const db = createDb(c.env.DB);
-      const [membership] = await db
-        .update(userTenants)
-        .set({
-          role: role,
-          updatedAt: sql`datetime('now')`,
-        })
-        .where(sql`${userTenants.userId} = ${userId} AND ${userTenants.tenantId} = ${tenantId}`)
-        .returning();
+      const membership = await getMembership(userId, tenantId, role, db);
 
       if (!membership) {
         return c.json({ error: 'Membership not found' }, 404);
@@ -210,10 +201,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
-      await Promise.all([
-        cache.delete(CacheKeys.user(userId)),
-        cache.delete(CacheKeys.tenantUsers(tenantId)),
-      ]);
+      await invalidateCaches(cache, false, userId, tenantId);
 
       return c.json({ message: 'Role updated', membership });
     } catch (error) {
@@ -238,10 +226,7 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
-      await Promise.all([
-        cache.delete(CacheKeys.user(userId)),
-        cache.delete(CacheKeys.tenantUsers(tenantId)),
-      ]);
+      await invalidateCaches(cache, false, userId, tenantId);
 
       return c.json({ message: 'User removed from tenant', membership });
     } catch (error) {
@@ -264,5 +249,29 @@ const usersRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       return c.json({ error: 'Failed to purge users cache' }, 500);
     }
   });
+
+const getMembership = async (userId: string, tenantId: string, role: "admin" | "owner" | "member" | "viewer", db: Database) => {
+  const [membership] = await db
+    .update(userTenants)
+    .set({
+      role: role,
+      updatedAt: sql`datetime('now')`,
+    })
+    .where(sql`${userTenants.userId} = ${userId} AND ${userTenants.tenantId} = ${tenantId}`)
+    .returning();
+
+  return membership;
+}
+
+const invalidateCaches = async (cacheManager: CacheManager, allUsers: boolean, userId?: string, tenantId?: string,) => {
+  const deleteUserCache = userId ? cacheManager.delete(CacheKeys.user(userId)) : Promise.resolve();
+  const deleteTenantCache = tenantId ? cacheManager.delete(CacheKeys.tenantUsers(tenantId)) : Promise.resolve();
+  const deleteAllUsersCache = allUsers ? cacheManager.delete(CacheKeys.allUsers()) : Promise.resolve();
+  await Promise.all([
+    deleteUserCache,
+    deleteTenantCache,
+    deleteAllUsersCache,
+  ]);
+}
 
 export default usersRoutes;

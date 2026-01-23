@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import tenantsRoutes from '@tenants/infrastructure/http/router';
 import { createMockEnv } from '../../../../test-utils/setup';
 
-const mockGetOrSet = vi.fn();
-const mockDelete = vi.fn();
+const mockGetOrSetCache = vi.fn();
+const mockDeleteCache = vi.fn();
 const mockInvalidateTenant = vi.fn();
 const mockFindMany = vi.fn();
 const mockFindFirst = vi.fn();
@@ -14,7 +14,6 @@ const mockReturning = vi.fn();
 const mockWhere = vi.fn();
 const mockSet = vi.fn();
 const mockValues = vi.fn();
-const mockWhereResolve = vi.fn();
 
 const mockQuery = {
   tenants: {
@@ -38,8 +37,8 @@ vi.mock('../../../../../src/features/cache/infrastructure/kv-cache', async () =>
   return {
     ...actual,
     createCacheManager: vi.fn(() => ({
-      getOrSet: mockGetOrSet,
-      delete: mockDelete,
+      getOrSet: mockGetOrSetCache,
+      delete: mockDeleteCache,
       invalidateTenant: mockInvalidateTenant,
     })),
   };
@@ -94,7 +93,7 @@ describe('tenantsRoutes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockReturning.mockResolvedValue([{ id: 'test-id', name: 'Test Tenant', slug: 'test-tenant', status: 'active', createdAt: new Date(), updatedAt: new Date() }]);
-    mockGetOrSet.mockImplementation(async (key, fetcher) => {
+    mockGetOrSetCache.mockImplementation(async (key, fetcher) => {
       return await fetcher();
     });
 
@@ -119,13 +118,14 @@ describe('tenantsRoutes', () => {
         { id: '2', name: 'Tenant 2', slug: 'tenant-2', status: 'active', createdAt: new Date(), updatedAt: new Date() },
       ];
       mockFindMany.mockResolvedValue(mockTenants);
-      mockGetOrSet.mockImplementation(async (key, fetcher) => {
+      mockGetOrSetCache.mockImplementation(async (key, fetcher) => {
         return await fetcher();
       });
 
       const req = new Request('https://api.example.com/');
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { tenants: Array<{ id: string; name: string; slug: string; status: string }> };
+      const rawdata = await res.json();
+      const data = rawdata as { tenants: Array<{ id: string; name: string; slug: string; status: string }> };
 
       expect(res.status).toBe(200);
       expect(data.tenants).toHaveLength(2);
@@ -135,7 +135,7 @@ describe('tenantsRoutes', () => {
         slug: 'tenant-1',
         status: 'active',
       });
-      expect(mockGetOrSet).toHaveBeenCalled();
+      expect(mockGetOrSetCache).toHaveBeenCalled();
       expect(mockFindMany).toHaveBeenCalled();
     });
 
@@ -166,13 +166,14 @@ describe('tenantsRoutes', () => {
         connections: [],
       };
       mockFindFirst.mockResolvedValue(mockTenant);
-      mockGetOrSet.mockImplementation(async (key, fetcher) => {
+      mockGetOrSetCache.mockImplementation(async (key, fetcher) => {
         return await fetcher();
       });
 
       const req = new Request('https://api.example.com/tenant-123');
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { tenant: { id: string; name: string; slug: string; status: string } };
+      const rawdata = await res.json();
+      const data = rawdata as { tenant: { id: string; name: string; slug: string; status: string } };
 
       expect(res.status).toBe(200);
       expect(data.tenant).toMatchObject({
@@ -181,7 +182,7 @@ describe('tenantsRoutes', () => {
         slug: 'test-tenant',
         status: 'active',
       });
-      expect(mockGetOrSet).toHaveBeenCalled();
+      expect(mockGetOrSetCache).toHaveBeenCalled();
       expect(mockFindFirst).toHaveBeenCalled();
     });
 
@@ -199,13 +200,14 @@ describe('tenantsRoutes', () => {
     it('should handle errors when fetching tenant', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
       mockFindFirst.mockRejectedValue(new Error('Database error'));
-      mockGetOrSet.mockImplementation(async (key, fetcher) => {
+      mockGetOrSetCache.mockImplementation(async (key, fetcher) => {
         return await fetcher();
       });
 
       const req = new Request('https://api.example.com/tenant-123');
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to fetch tenant' });
@@ -223,7 +225,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(400);
       expect(data).toHaveProperty('error', 'Validation failed');
@@ -232,7 +235,7 @@ describe('tenantsRoutes', () => {
     it('should create tenant successfully', async () => {
       const newTenant = { id: 'new-id', name: 'New Tenant', slug: 'new-tenant', status: 'active', createdAt: new Date(), updatedAt: new Date() };
       mockReturning.mockResolvedValue([newTenant]);
-      mockDelete.mockResolvedValue(undefined);
+      mockDeleteCache.mockResolvedValue(undefined);
 
       const req = new Request('https://api.example.com/', {
         method: 'POST',
@@ -241,7 +244,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; tenant: { id: string; name: string; slug: string; status: string } };
+      const rawdata = await res.json();
+      const data = rawdata as { message: string; tenant: { id: string; name: string; slug: string; status: string } };
 
       expect(res.status).toBe(201);
       expect(data.message).toBe('Tenant created');
@@ -252,7 +256,7 @@ describe('tenantsRoutes', () => {
         status: 'active',
       });
       expect(mockInsert).toHaveBeenCalled();
-      expect(mockDelete).toHaveBeenCalled();
+      expect(mockDeleteCache).toHaveBeenCalled();
     });
 
 
@@ -285,7 +289,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(400);
       expect(data).toHaveProperty('error', 'Validation failed');
@@ -294,7 +299,7 @@ describe('tenantsRoutes', () => {
     it('should update tenant successfully', async () => {
       const updatedTenant = { id: 'tenant-123', name: 'Updated Tenant', slug: 'test-tenant', status: 'active', createdAt: new Date(), updatedAt: new Date() };
       mockReturning.mockResolvedValue([updatedTenant]);
-      mockDelete.mockResolvedValue(undefined);
+      mockDeleteCache.mockResolvedValue(undefined);
 
       const req = new Request('https://api.example.com/tenant-123', {
         method: 'PUT',
@@ -303,7 +308,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; tenant: { id: string; name: string; slug: string; status: string } };
+      const rawdata = await res.json();
+      const data = rawdata as { message: string; tenant: { id: string; name: string; slug: string; status: string } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('Tenant updated');
@@ -314,7 +320,7 @@ describe('tenantsRoutes', () => {
         status: 'active',
       });
       expect(mockUpdate).toHaveBeenCalled();
-      expect(mockDelete).toHaveBeenCalledTimes(3);
+      expect(mockDeleteCache).toHaveBeenCalledTimes(3);
     });
 
     it('should return 404 when tenant not found', async () => {
@@ -359,14 +365,15 @@ describe('tenantsRoutes', () => {
       const deletedTenant = { id: 'tenant-123', name: 'Test Tenant', slug: 'test-tenant', status: 'active', createdAt: new Date(), updatedAt: new Date() };
       mockReturning.mockResolvedValue([deletedTenant]);
       mockInvalidateTenant.mockResolvedValue(5);
-      mockDelete.mockResolvedValue(undefined);
+      mockDeleteCache.mockResolvedValue(undefined);
 
       const req = new Request('https://api.example.com/tenant-123', {
         method: 'DELETE',
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; tenant: { id: string; name: string; slug: string; status: string } };
+      const rawdata = await res.json();
+      const data = rawdata as { message: string; tenant: { id: string; name: string; slug: string; status: string } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('Tenant deleted');
@@ -421,7 +428,8 @@ describe('tenantsRoutes', () => {
 
       const req = new Request('https://api.example.com/tenant-123/connections');
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { connections: Array<{ id: string; tenantId: string; name: string; dbType: string }> };
+      const rawdata = await res.json();
+      const data = rawdata as { connections: Array<{ id: string; tenantId: string; name: string; dbType: string }> };
 
       expect(res.status).toBe(200);
       expect(data.connections).toHaveLength(1);
@@ -431,16 +439,17 @@ describe('tenantsRoutes', () => {
         name: 'Primary DB',
         dbType: 'd1',
       });
-      expect(mockGetOrSet).toHaveBeenCalled();
+      expect(mockGetOrSetCache).toHaveBeenCalled();
     });
 
     it('should handle errors when fetching connections', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-      mockGetOrSet.mockRejectedValue(new Error('Database error'));
+      mockGetOrSetCache.mockRejectedValue(new Error('Database error'));
 
       const req = new Request('https://api.example.com/tenant-123/connections');
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to fetch connections' });
@@ -458,7 +467,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(400);
       expect(data).toHaveProperty('error', 'Validation failed');
@@ -477,7 +487,7 @@ describe('tenantsRoutes', () => {
         updatedAt: new Date(),
       };
       mockReturning.mockResolvedValue([newConnection]);
-      mockDelete.mockResolvedValue(undefined);
+      mockDeleteCache.mockResolvedValue(undefined);
 
       const req = new Request('https://api.example.com/tenant-123/connections', {
         method: 'POST',
@@ -491,7 +501,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; connection: { id: string; tenantId: string; name: string; dbType: string; isPrimary: boolean } };
+      const rawdata = await res.json();
+      const data = rawdata as { message: string; connection: { id: string; tenantId: string; name: string; dbType: string; isPrimary: boolean } };
 
       expect(res.status).toBe(201);
       expect(data.message).toBe('Connection added');
@@ -503,7 +514,7 @@ describe('tenantsRoutes', () => {
         isPrimary: false,
       });
       expect(mockInsert).toHaveBeenCalled();
-      expect(mockDelete).toHaveBeenCalledTimes(2);
+      expect(mockDeleteCache).toHaveBeenCalledTimes(2);
     });
 
     it('should set connection as primary and unset others', async () => {
@@ -519,7 +530,7 @@ describe('tenantsRoutes', () => {
         updatedAt: new Date(),
       };
       mockReturning.mockResolvedValue([newConnection]);
-      mockDelete.mockResolvedValue(undefined);
+      mockDeleteCache.mockResolvedValue(undefined);
 
       const req = new Request('https://api.example.com/tenant-123/connections', {
         method: 'POST',
@@ -533,7 +544,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; connection: { id: string; tenantId: string; name: string; dbType: string; isPrimary: boolean } };
+      const rawdata = await res.json();
+      const data = rawdata as { message: string; connection: { id: string; tenantId: string; name: string; dbType: string; isPrimary: boolean } };
 
       expect(res.status).toBe(201);
       expect(data.message).toBe('Connection added');
@@ -582,7 +594,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(400);
       expect(data).toHaveProperty('error', 'Validation failed');
@@ -601,7 +614,7 @@ describe('tenantsRoutes', () => {
         updatedAt: new Date(),
       };
       mockReturning.mockResolvedValue([updatedConnection]);
-      mockDelete.mockResolvedValue(undefined);
+      mockDeleteCache.mockResolvedValue(undefined);
 
       const req = new Request('https://api.example.com/tenant-123/connections/conn-123', {
         method: 'PUT',
@@ -613,7 +626,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; connection: { id: string; tenantId: string; name: string; dbType: string; isPrimary: boolean } };
+      const rawdata = await res.json();
+      const data = rawdata as { message: string; connection: { id: string; tenantId: string; name: string; dbType: string; isPrimary: boolean } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('Connection updated');
@@ -625,7 +639,7 @@ describe('tenantsRoutes', () => {
         isPrimary: false,
       });
       expect(mockUpdate).toHaveBeenCalled();
-      expect(mockDelete).toHaveBeenCalledTimes(2);
+      expect(mockDeleteCache).toHaveBeenCalledTimes(2);
     });
 
     it('should return 404 when connection not found', async () => {
@@ -679,14 +693,15 @@ describe('tenantsRoutes', () => {
         updatedAt: new Date(),
       };
       mockReturning.mockResolvedValue([deletedConnection]);
-      mockDelete.mockResolvedValue(undefined);
+      mockDeleteCache.mockResolvedValue(undefined);
 
       const req = new Request('https://api.example.com/tenant-123/connections/conn-123', {
         method: 'DELETE',
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; connection: { id: string; tenantId: string; name: string; dbType: string; isPrimary: boolean } };
+      const rawdata = await res.json();
+      const data = rawdata as { message: string; connection: { id: string; tenantId: string; name: string; dbType: string; isPrimary: boolean } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('Connection deleted');
@@ -698,7 +713,7 @@ describe('tenantsRoutes', () => {
         isPrimary: false,
       });
       expect(mockDeleteDb).toHaveBeenCalled();
-      expect(mockDelete).toHaveBeenCalledTimes(2);
+      expect(mockDeleteCache).toHaveBeenCalledTimes(2);
     });
 
     it('should return 404 when connection not found', async () => {
@@ -709,7 +724,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(404);
       expect(data).toEqual({ error: 'Connection not found' });
@@ -724,7 +740,8 @@ describe('tenantsRoutes', () => {
       });
 
       const res = await tenantsRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to delete connection' });

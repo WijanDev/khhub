@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { eq, sql } from 'drizzle-orm';
 import type { Env, Variables } from '@shared/domain/types';
 import { createDb, tenants, tenantConnections } from '@shared/infrastructure/db';
-import { createCacheManager, CacheKeys, CacheTTL } from '@cache/infrastructure/kv-cache';
+import { createCacheManager, CacheKeys, CacheTTL, CacheManager } from '@cache/infrastructure/kv-cache';
 import { validateJson, IdParamSchema, IdConnectionParamSchema, validateParam } from '@shared/infrastructure/http/middleware/validation';
 import { CreateTenantSchema, UpdateTenantSchema, CreateConnectionSchema, UpdateConnectionSchema } from '@khhub/shared';
 
@@ -69,7 +69,11 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate tenants list cache
       const cache = createCacheManager(c.env.CACHE);
-      await cache.delete(CacheKeys.allTenants());
+      const invalidateCachesParams = {
+        cacheManager: cache,
+        allTenants: true
+      };
+      await invalidateCaches(invalidateCachesParams);
 
       return c.json({ message: 'Tenant created', tenant }, 201);
     } catch (error) {
@@ -102,11 +106,13 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
-      await Promise.all([
-        cache.delete(CacheKeys.tenant(id)),
-        cache.delete(CacheKeys.tenantBySlug(tenant.slug)),
-        cache.delete(CacheKeys.allTenants()),
-      ]);
+      const invalidateCachesParams = {
+        cacheManager: cache,
+        allTenants: true,
+        tenantId: id,
+        tenantSlug: tenant.slug
+      };
+      await invalidateCaches(invalidateCachesParams);
 
       return c.json({ message: 'Tenant updated', tenant });
     } catch (error) {
@@ -127,7 +133,12 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
-      await Promise.all([cache.invalidateTenant(id), cache.delete(CacheKeys.allTenants())]);
+      const invalidateCachesParams = {
+        cacheManager: cache,
+        allTenants: true,
+        invalidateTenantId: id
+      };
+      await invalidateCaches(invalidateCachesParams);
 
       return c.json({ message: 'Tenant deleted', tenant });
     } catch (error) {
@@ -188,10 +199,13 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
-      await Promise.all([
-        cache.delete(CacheKeys.tenantConnections(tenantId)),
-        cache.delete(CacheKeys.tenant(tenantId)),
-      ]);
+      const invalidateCachesParams = {
+        cacheManager: cache,
+        allTenants: false,
+        tenantId,
+        tenantConnectionsId: tenantId,
+      };
+      await invalidateCaches(invalidateCachesParams);
 
       return c.json({ message: 'Connection added', connection }, 201);
     } catch (error) {
@@ -233,10 +247,13 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
 
       // Invalidate caches
       const cache = createCacheManager(c.env.CACHE);
-      await Promise.all([
-        cache.delete(CacheKeys.tenantConnections(tenantId)),
-        cache.delete(CacheKeys.tenant(tenantId)),
-      ]);
+      const invalidateCachesParams = {
+        cacheManager: cache,
+        allTenants: false,
+        tenantId,
+        tenantConnectionsId: tenantId,
+      };
+      await invalidateCaches(invalidateCachesParams);
 
       return c.json({ message: 'Connection updated', connection });
     } catch (error) {
@@ -272,5 +289,37 @@ const tenantsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
       return c.json({ error: 'Failed to delete connection' }, 500);
     }
   });
+
+interface InvalidateCachesParams {
+  cacheManager: CacheManager;
+  allTenants: boolean;
+  tenantId?: string;
+  tenantConnectionsId?: string;
+  tenantSlug?: string;
+  invalidateTenantId?: string;
+}
+
+const invalidateCaches = async ({
+  cacheManager,
+  allTenants,
+  tenantId,
+  tenantConnectionsId,
+  tenantSlug,
+  invalidateTenantId,
+}: InvalidateCachesParams) => {
+  const deleteTenantCache = tenantId ? cacheManager.delete(CacheKeys.tenant(tenantId)) : Promise.resolve();
+  const deleteTenantConnectionsCache = tenantConnectionsId ? cacheManager.delete(CacheKeys.tenantConnections(tenantConnectionsId)) : Promise.resolve();
+  const deleteAllTenantsCache = allTenants ? cacheManager.delete(CacheKeys.allTenants()) : Promise.resolve();
+  const deleteTenantSlugCache = tenantSlug ? cacheManager.delete(CacheKeys.tenantBySlug(tenantSlug)) : Promise.resolve();
+  const invalidateTenantCache = invalidateTenantId ? cacheManager.invalidateTenant(invalidateTenantId) : Promise.resolve();
+
+  await Promise.all([
+    deleteTenantCache,
+    deleteTenantConnectionsCache,
+    deleteAllTenantsCache,
+    deleteTenantSlugCache,
+    invalidateTenantCache,
+  ]);
+}
 
 export default tenantsRoutes;

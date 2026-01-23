@@ -132,8 +132,9 @@ describe('usersRoutes', () => {
 
       const req = new Request('https://api.example.com/');
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { users: Array<{ id: string; name: string; email: string; role: string }> };
+      const rawdata = await res.json();
 
+      const data = rawdata as { users: Array<{ id: string; name: string; email: string; role: string }> };
       expect(res.status).toBe(200);
       expect(data.users).toHaveLength(2);
       expect(data.users[0]).toMatchObject({
@@ -152,8 +153,9 @@ describe('usersRoutes', () => {
 
       const req = new Request('https://api.example.com/');
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
 
+      const data = rawdata as { error: string };
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to fetch users' });
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -181,7 +183,9 @@ describe('usersRoutes', () => {
 
       const req = new Request('https://api.example.com/user-123');
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { user: { id: string; name: string; email: string; tenants: Array<any> } };
+      const rawdata = await res.json();
+
+      const data = rawdata as { user: { id: string; name: string; email: string; tenants: Array<any> } };
 
       expect(res.status).toBe(200);
       expect(data.user).toMatchObject({
@@ -199,7 +203,9 @@ describe('usersRoutes', () => {
 
       const req = new Request('https://api.example.com/nonexistent');
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(404);
       expect(data).toEqual({ error: 'User not found' });
@@ -211,7 +217,9 @@ describe('usersRoutes', () => {
 
       const req = new Request('https://api.example.com/user-123');
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to fetch user' });
@@ -229,7 +237,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(400);
       expect(data).toHaveProperty('error', 'Validation failed');
@@ -247,7 +257,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; user: { id: string; name: string; email: string; role: string } };
+      const rawdata = await res.json();
+
+      const data = rawdata as { message: string; user: { id: string; name: string; email: string; role: string } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('User updated');
@@ -271,7 +283,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(404);
       expect(data).toEqual({ error: 'User not found' });
@@ -288,7 +302,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to update user' });
@@ -309,7 +325,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; user: { id: string; email: string; name: string } };
+      const rawdata = await res.json();
+
+      const data = rawdata as { message: string; user: { id: string; email: string; name: string } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('User deleted');
@@ -336,7 +354,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; user: { id: string; email: string; name: string } };
+      const rawdata = await res.json();
+
+      const data = rawdata as { message: string; user: { id: string; email: string; name: string } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('User deleted');
@@ -352,7 +372,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(404);
       expect(data).toEqual({ error: 'User not found' });
@@ -367,7 +389,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to delete user' });
@@ -385,7 +409,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(400);
       expect(data).toHaveProperty('error', 'Validation failed');
@@ -413,7 +439,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; membership: { id: string; userId: string; tenantId: string; role: string } };
+      const rawdata = await res.json();
+
+      const data = rawdata as { message: string; membership: { id: string; userId: string; tenantId: string; role: string } };
 
       expect(res.status).toBe(201);
       expect(data.message).toBe('User added to tenant');
@@ -441,7 +469,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to add user to tenant' });
@@ -459,7 +489,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(400);
       expect(data).toHaveProperty('error', 'Validation failed');
@@ -484,7 +516,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; membership: { id: string; userId: string; tenantId: string; role: string } };
+      const rawdata = await res.json();
+
+      const data = rawdata as { message: string; membership: { id: string; userId: string; tenantId: string; role: string } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('Role updated');
@@ -508,7 +542,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(404);
       expect(data).toEqual({ error: 'Membership not found' });
@@ -525,7 +561,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to update role' });
@@ -552,7 +590,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; membership: { id: string; userId: string; tenantId: string; role: string } };
+      const rawdata = await res.json();
+
+      const data = rawdata as { message: string; membership: { id: string; userId: string; tenantId: string; role: string } };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('User removed from tenant');
@@ -574,7 +614,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(404);
       expect(data).toEqual({ error: 'Membership not found' });
@@ -589,7 +631,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to remove user from tenant' });
@@ -607,7 +651,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { message: string; deletedCount: number };
+      const rawdata = await res.json();
+
+      const data = rawdata as { message: string; deletedCount: number };
 
       expect(res.status).toBe(200);
       expect(data.message).toBe('Users cache purged successfully');
@@ -624,7 +670,9 @@ describe('usersRoutes', () => {
       });
 
       const res = await usersRoutes.fetch(req, createMockEnv());
-      const data = (await res.json()) as { error: string };
+      const rawdata = await res.json();
+
+      const data = rawdata as { error: string };
 
       expect(res.status).toBe(500);
       expect(data).toEqual({ error: 'Failed to purge users cache' });
