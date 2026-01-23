@@ -18,7 +18,8 @@ export const homeRoute = createRoute({
             }
             return response.json() as Promise<{ message: string }>;
         } catch (error) {
-            return { message: `Failed to connect to API. Error: ${error}` };
+            console.error('Failed to connect to API:', error);
+            return { message: `Failed to connect to API.` };
         }
     },
     component: HomePage,

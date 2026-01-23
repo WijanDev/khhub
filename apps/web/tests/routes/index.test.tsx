@@ -247,12 +247,11 @@ describe('Route', () => {
   });
 
   it('should return error message when API call throws', async () => {
-    const error = "Network error";
-    (globalThis as any).__mockApiHelloGet__.mockRejectedValue(new Error(error));
+    (globalThis as any).__mockApiHelloGet__.mockRejectedValue(new Error('Error'));
 
     const result = await route.loader();
 
-    expect(result).toEqual({ message: `Failed to connect to API. Error: ${error}` });
+    expect(result).toEqual({ message: `Failed to connect to API.` });
     expect((globalThis as any).__mockApiHelloGet__).toHaveBeenCalled();
   });
 });
