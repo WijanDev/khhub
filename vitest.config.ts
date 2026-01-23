@@ -6,5 +6,9 @@ export default defineConfig({
             'apps/*/vitest.config.ts',
             'packages/*/vitest.config.ts',
         ],
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'lcov'],
+        },
     },
 });
