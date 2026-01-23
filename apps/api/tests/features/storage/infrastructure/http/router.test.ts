@@ -291,6 +291,7 @@ describe('storageRoutes', () => {
     it.each([
       ['/api/storage', '/api/storage/files/test-file.txt'],
       ['/storage', '/storage/files/test-file.txt'],
+      ['/', '/files/test-file.txt'],
     ])('should handle %s path prefix', async (mountPath, requestPath) => {
       const fileData = new ReadableStream();
       mockDownload.mockResolvedValue({
@@ -376,6 +377,7 @@ describe('storageRoutes', () => {
     it.each([
       ['/api/storage', '/api/storage/files/info/test-file.txt'],
       ['/storage', '/storage/files/info/test-file.txt'],
+      ['/', '/files/info/test-file.txt'],
     ])('should handle %s path prefix', async (mountPath, requestPath) => {
       mockHead.mockResolvedValue({
         key: 'test-file.txt',
@@ -464,6 +466,7 @@ describe('storageRoutes', () => {
     it.each([
       ['/api/storage', '/api/storage/files/test-file.txt'],
       ['/storage', '/storage/files/test-file.txt'],
+      ['/', '/files/test-file.txt'],
     ])('should handle %s path prefix for DELETE', async (mountPath, requestPath) => {
       mockExists.mockResolvedValue(true);
       mockDelete.mockResolvedValue(undefined);
