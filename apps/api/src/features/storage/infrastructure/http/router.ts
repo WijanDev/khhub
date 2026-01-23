@@ -74,15 +74,7 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     })
     // Get file info (metadata only) - must come before /files/* to match correctly
     .get('/files/info/*', async (c) => {
-        // Handle both mounted (/storage/files/info/*) and direct (/api/storage/files/info/*) paths
-        let path = c.req.path;
-        if (path.startsWith('/api/storage/files/info/')) {
-            path = path.replace('/api/storage/files/info/', '');
-        } else if (path.startsWith('/storage/files/info/')) {
-            path = path.replace('/storage/files/info/', '');
-        } else if (path.startsWith('/files/info/')) {
-            path = path.replace('/files/info/', '');
-        }
+        let path = pathHandler(c.req.path);
 
         try {
             const storageManager = createStorageManager(c.env.STORAGE);
@@ -109,15 +101,7 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     })
     // Download file - must come after /files/info/* to match correctly
     .get('/files/*', async (c) => {
-        // Handle both mounted (/storage/files/*) and direct (/api/storage/files/*) paths
-        let path = c.req.path;
-        if (path.startsWith('/api/storage/files/')) {
-            path = path.replace('/api/storage/files/', '');
-        } else if (path.startsWith('/storage/files/')) {
-            path = path.replace('/storage/files/', '');
-        } else if (path.startsWith('/files/')) {
-            path = path.replace('/files/', '');
-        }
+        let path = pathHandler(c.req.path);
 
         try {
             const storageManager = createStorageManager(c.env.STORAGE);
@@ -142,15 +126,7 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
     })
     // Delete file
     .delete('/files/*', async (c) => {
-        // Handle both mounted (/storage/files/*) and direct (/api/storage/files/*) paths
-        let path = c.req.path;
-        if (path.startsWith('/api/storage/files/')) {
-            path = path.replace('/api/storage/files/', '');
-        } else if (path.startsWith('/storage/files/')) {
-            path = path.replace('/storage/files/', '');
-        } else if (path.startsWith('/files/')) {
-            path = path.replace('/files/', '');
-        }
+        let path = pathHandler(c.req.path);
 
         try {
             const storageManager = createStorageManager(c.env.STORAGE);
@@ -265,5 +241,16 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
             return c.json({ error: 'Failed to delete avatar' }, 500);
         }
     });
+
+const pathHandler = (path: string) => {
+    if (path.startsWith('/api/storage/files/info/')) {
+        path = path.replace('/api/storage/files/info/', '');
+    } else if (path.startsWith('/storage/files/info/')) {
+        path = path.replace('/storage/files/info/', '');
+    } else if (path.startsWith('/files/info/')) {
+        path = path.replace('/files/info/', '');
+    }
+    return path;
+}
 
 export default storageRoutes;
