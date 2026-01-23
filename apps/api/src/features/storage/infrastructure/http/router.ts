@@ -111,7 +111,7 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
                 return c.json({ error: 'File not found' }, 404);
             }
 
-            return returnResponseFile(file);
+            return BuildResponseFile(file);
         } catch (error) {
             console.error('Error downloading file:', error);
             return c.json({ error: 'Failed to download file' }, 500);
@@ -235,7 +235,7 @@ const storageRoutes = new Hono<{ Bindings: Env; Variables: Variables }>()
         }
     });
 
-const returnResponseFile = (file: DownloadResult) => {
+const BuildResponseFile = (file: DownloadResult) => {
     return new Response(file.data, {
         headers: {
             'Content-Type': file.info.contentType || 'application/octet-stream',
