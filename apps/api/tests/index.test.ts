@@ -48,7 +48,7 @@ describe('API Index', () => {
         mockEnv
       );
 
-      const data = (await response.json()) as { status: string; timestamp: string; environment: string };
+      const data = await response.json() as any;
       expect(response.status).toBe(200);
       expect(data.status).toBe('ok');
       expect(data.environment).toBe('test');
@@ -64,7 +64,7 @@ describe('API Index', () => {
         new Request('http://localhost/health'),
         envWithoutEnvironment
       );
-      const data = (await response.json()) as { environment: string };
+      const data = (await response.json()) as any;
       expect(data.environment).toBe('development');
     });
   });
@@ -73,7 +73,7 @@ describe('API Index', () => {
     it('should return hello message', async () => {
       const client = testClient(app, { env: mockEnv });
       const res = await (client as any).hello.$get();
-      const data = (await res.json()) as { message: string };
+      const data = await res.json();
       expect(res.status).toBe(200);
       expect(data).toEqual({ message: 'Hello from Hono API!' });
     });
@@ -90,7 +90,7 @@ describe('API Index', () => {
         createMockEnv({ CACHE: mockKV })
       );
 
-      const data = (await response.json()) as { message: string; deletedCount: number };
+      const data = (await response.json()) as any;
       expect(response.status).toBe(200);
       expect(data.message).toBe('All cache purged successfully');
       expect(data.deletedCount).toBeGreaterThanOrEqual(0);
@@ -106,7 +106,7 @@ describe('API Index', () => {
         createMockEnv({ CACHE: mockKV })
       );
 
-      const data = (await response.json()) as { message: string; deletedCount: number };
+      const data = (await response.json()) as any;
       expect(response.status).toBe(200);
       expect(data.message).toBe('users cache purged successfully');
     });
@@ -117,7 +117,7 @@ describe('API Index', () => {
         mockEnv
       );
 
-      const data = (await response.json()) as { error: string };
+      const data = (await response.json()) as any;
       expect(response.status).toBe(400);
       expect(data.error).toContain('Invalid cache type');
     });
@@ -142,7 +142,7 @@ describe('API Index', () => {
         createMockEnv({ CACHE: errorKV })
       );
 
-      const data = (await response.json()) as { error: string };
+      const data = (await response.json()) as any;
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to purge cache');
     });
@@ -160,7 +160,7 @@ describe('API Index', () => {
         createMockEnv({ CACHE: errorKV })
       );
 
-      const data = (await response.json()) as { error: string };
+      const data = (await response.json()) as any;
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to purge cache');
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error purging users cache:', expect.any(Error));
@@ -205,7 +205,7 @@ describe('API Index', () => {
         new Request('http://localhost/non-existent-route'),
         mockEnv
       );
-      const data = (await response.json()) as { error: string };
+      const data = (await response.json()) as any;
       expect(response.status).toBe(404);
       expect(data).toEqual({ error: 'Not Found' });
     });
@@ -215,27 +215,28 @@ describe('API Index', () => {
     it('should call error handler and log error when route throws', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
-      const originalDate = global.Date;
+      const originalDate = globalThis.Date;
+      const mockedIsoString = function () {
+        throw new Error('Date error for handler test');
+      };
       const mockDate = vi.fn(() => {
         const date = new originalDate();
-        date.toISOString = () => {
-          throw new Error('Date error for handler test');
-        };
+        date.toISOString = mockedIsoString;
         return date;
       });
-      global.Date = mockDate as any;
+      globalThis.Date = mockDate as any;
 
       const response = await app.fetch(
         new Request('http://localhost/health'),
         mockEnv
       );
 
-      const data = (await response.json()) as { error: string };
+      const data = (await response.json()) as any;
       expect(response.status).toBe(500);
       expect(data).toEqual({ error: 'Internal Server Error' });
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', expect.any(Error));
 
-      global.Date = originalDate;
+      globalThis.Date = originalDate;
       consoleErrorSpy.mockRestore();
     });
   });
